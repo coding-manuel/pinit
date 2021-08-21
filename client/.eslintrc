@@ -1,23 +1,20 @@
-{
-    "env": {
-        "browser": true,
-        "commonjs": true,
-        "es2021": true,
-        "node": true
-    },
-    "extends": [
-        "react-app",
-        "plugin:prettier/recommended",
-    ],
-    "parserOptions": {
-        "ecmaFeatures": {
-            "jsx": true
-        },
-        "ecmaVersion": 12
-    },
-    "plugins": [
-        "react"
-    ],
-    "rules": {
-    }
-}
+// {
+//     "env": {
+//         "browser": true,
+//         "commonjs": true,
+//         "es2021": true,
+//         "node": true
+//     },
+//     "extends": [
+//         "react-app",
+//         "plugin:prettier/recommended",
+//     ],
+//     "parserOptions": {
+//         "sourceType": "module"
+//     },
+//     "plugins": [
+//         "react"
+//     ],
+//     "rules": {
+//     }
+// }
