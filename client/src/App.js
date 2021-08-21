@@ -1,5 +1,7 @@
+import Topbar from "../src/components/Navbar/toptitle.topbar.jsx";
+
 function App() {
-  return <h1>Hello World</h1>;
+  return <Topbar/>;
 }
 
 export default App;
