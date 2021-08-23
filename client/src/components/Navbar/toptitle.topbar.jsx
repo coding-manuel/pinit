@@ -2,7 +2,7 @@ import React from "react";
 import styled from "styled-components";
 
 const Header = styled.section`
-	background-color: ${(props) => props.theme.color.dark[0]};
+	background-color: #1f1b10;
 	margin: auto -16px;
 	padding: 16px 32px;
 	box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.3);

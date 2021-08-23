@@ -4,7 +4,7 @@ import styled from "styled-components";
 const Icon = styled.img;
 
 function Sidebar() {
-	return;
+	return <Icon></Icon>;
 }
 
 export default Sidebar;
