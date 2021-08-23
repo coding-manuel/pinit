@@ -4,7 +4,7 @@ const InterpolateHtmlPlugin = require("interpolate-html-plugin");
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 
 const config = {
-	mode: "production",
+	mode: "development",
 	entry: "./src/index.js", //This property defines where the application starts
 	output: {
 		path: path.join(__dirname, "/build"),
@@ -32,6 +32,14 @@ const config = {
 				test: /\.css$/i,
 				use: ["style-loader", "css-loader"],
 			},
+			{
+				test: /\.(png|jpe?g|gif|svg)$/i,
+				use: [
+				  {
+					loader: 'file-loader',
+				  },
+				],
+			  },
 		],
 	},
 
