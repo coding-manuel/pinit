@@ -1,8 +1,14 @@
 import React from "react";
-import Topbar from "../src/components/Navbar/toptitle.topbar.jsx";
+import { ThemeProvider } from 'styled-components';
+import Theme from "./theme";
+import Topbar from "./components/Navbar/toptitle.topbar.jsx";
 
 function App() {
-  return <Topbar/>;
+	return (
+		<ThemeProvider theme={Theme}>
+			<Topbar />
+		</ThemeProvider>
+	);
 }
 
 export default App;
