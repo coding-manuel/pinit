@@ -19,24 +19,39 @@ const Icon = styled.div`
   padding:10px 0px;
   // width:30px;
   justify-content: center;
+  cursor: pointer;
+  transition: transform 250ms;
+    &:hover {
+      transform: translateY(-5px);
+      opacity: .5;
+    }
 `
 // const WhiteBorad  = styled(Board)`
 //   fill : skyblue;
 // `
 const Text = styled.p`
     color: white;
-    margin-top: 0px;
+    margin-top: -5px;
     padding-bottom: 5px;
     font-size: small;
     text-align: center;
+    &:hover {
+      cursor: pointer;
+    }
+
 `
 const Container = styled.div`
     background-color: #1f1b10;
-    position: relative;
-    top: 20vh;
-    width: 12vh;
+    width: 6%;
+    min-width: 70px;
+    height: 70vh;
+    overflow-y: auto;
+    margin: auto;
+    position: absolute;
+    top: 0; bottom: 0;
+    border: solid black;
     margin-left: 20px;
-    left:0;
+    max-height: 500px;
     border-radius: 10px;
     box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.3);
 `;
