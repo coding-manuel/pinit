@@ -9,7 +9,7 @@ function App() {
 	return (
 		<ThemeProvider theme={Theme}>
 			<Topbar />
-			{/* <Sidebar /> */}
+			<Sidebar/>
 			<Canvas />
 		</ThemeProvider>
 	);
