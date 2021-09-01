@@ -4,5 +4,11 @@ const Theme = {
         white: "#ffffff",
         dark:["#292929", "#424242", "#606060"]
     },
+    typography: {
+        light: 300,
+        regular: 400,
+        semibold: 600,
+        bold: 700,
+    },
 }
 export default Theme;
