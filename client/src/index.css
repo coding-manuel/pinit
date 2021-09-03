@@ -171,6 +171,29 @@ textarea {
 	overflow: auto;
 }
 
+#root {
+	overflow: hidden;
+}
+
+::-webkit-input-placeholder {
+	font-weight: 300;
+	color: #d6d6d6;
+}
+:-moz-placeholder {
+	/* Upto Firefox 18, Deprecated in Firefox 19  */
+	font-weight: 300;
+	color: #d6d6d6;
+}
+::-moz-placeholder {
+	/* Firefox 19+ */
+	font-weight: 300;
+	color: #d6d6d6;
+}
+:-ms-input-placeholder {
+	font-weight: 300;
+	color: #d6d6d6;
+}
+
 [type="checkbox"],
 [type="radio"] {
 	box-sizing: border-box; /* 1 */

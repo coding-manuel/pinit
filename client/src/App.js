@@ -9,8 +9,8 @@ function App() {
 	return (
 		<ThemeProvider theme={Theme}>
 			<Topbar />
-			<Sidebar/>
 			<Canvas />
+			<Sidebar/>
 		</ThemeProvider>
 	);
 }

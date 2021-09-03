@@ -1,5 +1,5 @@
 import React from "react";
-import { Stage, Layer, Rect, Text, Transformer } from "react-konva";
+import { Stage, Layer, Rect } from "react-konva";
 import Note from "./Note.jsx";
 
 const initialRectangles = [
@@ -8,19 +8,19 @@ const initialRectangles = [
 		y: 50,
 		width: 300,
 		height: 60,
-		fill: "red",
+		fill: "#606060",
 		shadowBlur: 5,
 		id: "rect1",
-		text: "Type Here...",
+		text: "",
 	},
 	{
 		x: 150,
 		y: 150,
 		width: 300,
 		height: 60,
-		fill: "green",
+		fill: "#606060",
 		id: "rect2",
-		text: "Type Here...",
+		text: "Chicken is great",
 	},
 ];
 
@@ -42,7 +42,13 @@ export default function App() {
 			onMouseDown={checkDeselect}
 			onTouchStart={checkDeselect}
 		>
-			<Layer draggable>
+			<Layer>
+				<Rect
+					fill={"#292929"}
+					listening={false}
+					width={window.innerWidth}
+					height={window.innerHeight}
+				/>
 				{rectangles.map((rect, i) => {
 					return (
 						<Note
