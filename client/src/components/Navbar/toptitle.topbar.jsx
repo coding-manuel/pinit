@@ -1,97 +1,109 @@
 import React from "react";
+import styled from "styled-components";
 import Logo from "../../assets/logos/pinIT Logo.svg";
 import Share from "../../assets/icons/share.svg";
 import People from "../../assets/icons/people.svg";
 import Settings from "../../assets/icons/settings.svg";
 import Export from "../../assets/icons/export.svg";
-import styled from "styled-components";
 
-export const Navbar = styled.nav`
-	background: #000;
+const Navbar = styled.div`
+	background: ${(props) => props.theme.color.dark[1]};
 	height: 40px;
 	display: flex;
 	justify-content: space-between;
-	padding: 20px 15px;
-	z-index: 10;
+	padding: 10px 20px;
+	z-index: 100;
 `;
 
-export const NavLink = styled.a`
-	color: #fff;
-	font-size: 45px;
-	font-family: "Lucida Console", "Courier New", monospace;
-	font-weight: 900;
-	display: flex;
-	align-items: center;
+const LogoCont = styled.div`
+	transform: scale(0.8);
+`;
+
+const Title = styled.h3`
+	margin: 0;
+`;
+
+const NavLink = styled.a`
+	color: ${(props) => props.theme.color.white};
+	font-weight: ${(props) => props.theme.typography.semibold};
 	text-decoration: none;
 	padding: 0 1rem;
-	height: 100%;
 	cursor: pointer;
-	&.active {
-		color: #15cdfc;
-	}
 `;
 
-export const NavMenu = styled.div`
+const NavMenu = styled.div`
 	display: flex;
 	align-items: center;
-	margin-right: -24px;
 	@media screen and (max-width: 768px) {
 		display: none;
 	}
 `;
 
-export const NavBtn = styled.nav`
-	display: flex;
-	align-items: center;
-	margin-right: 24px;
-	@media screen and (max-width: 768px) {
-		display: none;
-	}
-`;
-
-export const NavBtnLink = styled.a`
+const NavBtnLink = styled.a`
 	border-radius: 4px;
-	background: ${(props) => (props.primary ? "#800080" : "black")};
-	fill: ${(props) => (props.primary ? "black" : "palevioletred")};
-	padding: 10px 22px;
-	outline: none;
-	border: none;
+	background: ${(props) => (props.primary ? "#800080" : "transparent")};
+	padding: 15px;
+	transform: scale(0.8);
 	cursor: pointer;
-	transition: all 0.2s ease-in-out;
-	text-decoration: none;
-	margin-left: 24px;
+	transition: all 0.2s ease-out;
 	&:hover {
-		background: ${(props) => (props.primary ? "black" : "#2B2B2B")};
-		transition: all 0.2s ease-in-out;
+		transform: scale(0.8) translateY(-5px);
 	}
+`;
+
+const ShareBtn = styled.a`
+	display: flex;
+	align-items: center;
+	background: ${(props) => props.theme.color.primary};
+	padding: 5px 10px;
+	border-radius: 5px;
+	margin: 0 15px;
+	cursor: pointer;
+	transition: all 0.2s ease-out;
+	&:hover {
+		background: ${(props) => props.theme.color.primaryDarken};
+	}
+`;
+
+const ShareIcon = styled.div`
+	transform: scale(0.8);
+`;
+
+const ShareText = styled.h4`
+	margin: 0;
+	transform: translateY(-2px);
+	padding: 0 0 0 10px;
+	font-weight: ${(props) => props.theme.typography.semibold};
+	color: ${(props) => props.theme.color.white};
 `;
 
 const Topbar = () => (
 	<>
 		<Navbar>
 			<NavLink to="/">
-				<Logo />
+				<LogoCont>
+					<Logo />
+				</LogoCont>
 			</NavLink>
+			<Title>
+				<NavLink to="/sign-up">Title</NavLink>
+			</Title>
 			<NavMenu>
-				<NavLink to="/sign-up" activeStyle>
-					Title
-				</NavLink>
-			</NavMenu>
-			<NavMenu>
-				<NavBtn>
-					<NavBtnLink primary>
+				<ShareBtn>
+					<ShareIcon>
 						<Share />
-					</NavBtnLink>
-					<NavBtnLink>
-						<Export />
-					</NavBtnLink>
-					<NavBtnLink>
-						<People />
-					</NavBtnLink>
-					<NavBtnLink>
-						<Settings />
-					</NavBtnLink>
-				</NavBtn>
+					</ShareIcon>
+					<ShareText>Share</ShareText>
+				</ShareBtn>
+				<NavBtnLink>
+					<Export />
+				</NavBtnLink>
+				<NavBtnLink>
+					<People />
+				</NavBtnLink>
+				<NavBtnLink>
+					<Settings />
+				</NavBtnLink>
 			</NavMenu>
 		</Navbar>
 	</>

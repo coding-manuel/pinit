@@ -4,6 +4,7 @@ import Theme from "./theme";
 import Topbar from "./components/Navbar/toptitle.topbar.jsx";
 import Sidebar from "./components/Sidebar/sidebar.jsx";
 import Canvas from "./components/Canvas/Canvas.jsx"
+import FormatBar from "./components/FormatBar/FormatBar.jsx";
 
 function App() {
 	return (
@@ -11,6 +12,7 @@ function App() {
 			<Topbar />
 			<Canvas />
 			<Sidebar/>
+			<FormatBar />
 		</ThemeProvider>
 	);
 }
