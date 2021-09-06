@@ -1,10 +1,10 @@
 import React from "react";
+import styled from "styled-components";
 import Logo from "../../assets/logos/pinIT Logo.svg";
 import Share from "../../assets/icons/share.svg";
 import People from "../../assets/icons/people.svg";
 import Settings from "../../assets/icons/settings.svg";
 import Export from "../../assets/icons/export.svg";
-import styled from "styled-components";
 
 const Navbar = styled.div`
 	background: ${(props) => props.theme.color.dark[1]};

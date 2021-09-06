@@ -7,7 +7,7 @@ import "./index.css";
 
 WebFont.load({
   google: {
-    families: ['Open Sans:300,400,600,700', 'sans-serif']
+    families: ['Open Sans:300,400,600,700', 'Bitter:600', 'sans-serif']
   }
 });
 
