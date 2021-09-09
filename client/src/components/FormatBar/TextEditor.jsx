@@ -9,9 +9,16 @@ const IconCont = styled.div`
 	height: 35px;
 	width: 40px;
 	border-radius: 5px;
+	transition: 0.2s ease-out;
 	cursor: pointer;
 	background-color: ${(props) =>
 		props.selected ? props.theme.color.dark[2] : "transparent"};
+	&:hover {
+		background-color: ${(props) =>
+			props.selected
+				? props.theme.color.dark[2]
+				: props.theme.color.dark[3]};
+	}
 `;
 
 const formatMenu = [

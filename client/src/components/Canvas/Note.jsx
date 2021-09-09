@@ -67,6 +67,7 @@ const Rectangle = ({ shapeProps, isSelected, onSelect, onChange, text }) => {
 	return (
 		<>
 			<Group
+				name="note"
 				ref={group}
 				id={shapeProps.id}
 				width={shapeProps.width}
