@@ -20,8 +20,27 @@ const initialState = {
 			fill: "#606060",
 			text: "Chicken is great",
 		},
+		{
+			id: "rect3",
+			x: 200,
+			y: 150,
+			width: 300,
+			height: 60,
+			fill: "#606060",
+			text: "Chicken is great",
+		},
+		{
+			id: "rect4",
+			x: 300,
+			y: 150,
+			width: 300,
+			height: 60,
+			fill: "#606060",
+			text: "Chicken is great",
+		},
 	],
 	selectedNote: [],
+	draggedNote: [],
 };
 
 const noteSlice = createSlice({
@@ -48,11 +67,21 @@ const noteSlice = createSlice({
 		SELECT_NOTE(state, { payload }) {
 			state.selectedNote = payload;
 		},
+		DRAG_NOTE(state, { payload }) {
+			state.draggedNote = payload;
+		},
+		FORMAT_NOTE_CONTENT(state, { payload }) {},
 	},
 });
 
 const { actions, reducer } = noteSlice;
 
-export const { UPDATE_NOTESET, SELECT_NOTE, CREATE_NOTE } = actions;
+export const {
+	UPDATE_NOTESET,
+	DRAG_NOTE,
+	SELECT_NOTE,
+	CREATE_NOTE,
+	FORMAT_NOTE_CONTENT,
+} = actions;
 
 export default reducer;
