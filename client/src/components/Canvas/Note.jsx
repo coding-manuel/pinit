@@ -1,235 +1,701 @@
-import React from "react";
-import { Rect, Transformer, Text, Group } from "react-konva";
-import { Html } from "react-konva-utils";
+import React, {
+	useMemo,
+	useState,
+	useCallback,
+	useRef,
+	useContext,
+	Suspense,
+} from "react";
+import { useDispatch, useSelector } from "react-redux";
+import {
+	UPDATE_NOTESET,
+	SELECT_NOTE,
+	DRAG_NOTE,
+	FORMAT_NOTE_CONTENT,
+} from "../../store/slices/noteSlice";
+import styled, { ThemeContext } from "styled-components";
+import { Rnd } from "react-rnd";
+import isHotkey from "is-hotkey";
+import { createEditor, Editor, Text, Range, Transforms } from "slate";
+import { Slate, Editable, withReact, ReactEditor, useSlate } from "slate-react";
+import { useTransition, config, animated } from "react-spring";
+import { withHistory } from "slate-history";
+import Down from "../../assets/icons/down.svg";
 
-const Rectangle = ({ shapeProps, isSelected, onSelect, onChange, text }) => {
-	const [inputText, changeText] = React.useState(text);
-	const [inputTextRows, changeInputTextRows] = React.useState(0);
-	const [textAreaHeight, changeTextAreaHeight] = React.useState(0);
-	const [shapeHeight, changeShapeHeight] = React.useState(shapeProps.height); // height of the all groups
+const NoteTop = styled.div`
+	position: absolute;
+	height: 100%;
+	width: 100%;
+	transition: 0.1s ease-out;
+	border: 2px solid
+		${(props) => (props.isSelected ? props.theme.color.white : "transparent")};
+	box-shadow: -11px 7px 20px 3px
+		${(props) => (props.draggedNote ? "#222222" : "transparent")};
+	border-radius: 5px;
+	pointer-events: ${(props) => (props.isSelected ? "none" : "all")};
+	transform: translate(-2px, -2px);
+`;
 
-	//flags
-	const [beingDragged, changeBeingDragged] = React.useState(false); //dragged trigger
+const EditorContainer = styled.div`
+	width: -webkit-fill-available;
+	width: fill-available;
+	overflow: hidden;
+	padding: 20px 20px;
+`;
 
-	//refs
-	const trRef = React.useRef(); //transformer
-	const shapeRef = React.useRef(); //rectangle fill
-	const group = React.useRef(); //main group
-	const textArea = React.useRef(); //text area
+const EditorTextContainer = styled.div``;
+const NoteOverflow = styled.div`
+	background: ${(props) =>
+		props.overflow
+			? "linear-gradient(360deg,rgba(96,96,96,1) 8%,rgba(96,96,96,0.5746673669467788) 18%,rgba(90,103,106,0) 25%,rgba(86,108,113,0) 30%,rgba(0,212,255,0) 100%)"
+			: "transparent"};
+	height: 100px;
+	width: 90%;
+	position: absolute;
+	bottom: 0;
+	z-index: 10;
+	transition: 0.2s ease-out;
+	pointer-events: none;
+`;
 
-	React.useEffect(() => {
-		if (isSelected) {
-			trRef.current.nodes([shapeRef.current]);
-			trRef.current.getLayer().batchDraw();
-			textArea.current.setSelectionRange(
-				textArea.current.textLength,
-				textArea.current.textLength
-			);
+const FormatCont = styled(animated.div)`
+	position: absolute;
+	left: 50%;
+	height: 50px;
+	background-color: ${(props) => props.theme.color.dark[1]};
+	box-shadow: 0 11px 15px -7px rgba(51, 61, 78, 0.2),
+		0 9px 46px 8px rgba(51, 61, 78, 0.12),
+		0 24px 38px 3px rgba(51, 61, 78, 0.14);
+	border-radius: 5px;
+	display: flex;
+	align-items: center;
+	transform: translateX(-50%);
+`;
 
-			if (textAreaHeight > shapeProps.height) {
-				changeShapeHeight(textAreaHeight + 25);
-			}
-		} else {
-			changeShapeHeight(shapeProps.height);
-		}
-	}, [isSelected]);
+const FormatBox = styled.div`
+	display: flex;
+	align-items: center;
+	padding: 0 10px;
+`;
 
-	const calculateTextAreaHeight = function (ta, scanAmount) {
-		var origHeight = ta.style.height,
-			height = ta.offsetHeight,
-			scrollHeight = ta.scrollHeight;
-		/// only bother if the ta is bigger than content
-		if (height >= scrollHeight) {
-			/// check that our browser supports changing dimension
-			/// calculations mid-way through a function call...
-			ta.style.height = height + scanAmount + "px";
-			/// by checking that scrollHeight has updated
-			if (scrollHeight < ta.scrollHeight) {
-				/// now try and scan the ta's height downwards
-				/// until scrollHeight becomes larger than height
-				while (ta.offsetHeight >= ta.scrollHeight) {
-					ta.style.height = (height -= scanAmount) + "px";
-				}
-				/// be more specific to get the exact height
-				while (ta.offsetHeight < ta.scrollHeight) {
-					ta.style.height = height++ + "px";
-				}
-				/// reset the ta back to it's original height
-				ta.style.height = origHeight;
-				/// put the overflow back
-				return height;
-			}
-		} else {
-			return scrollHeight;
-		}
+const IconCont = styled.div`
+	margin: 0 10px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 35px;
+	width: 40px;
+	border-radius: 5px;
+	transition: 0.2s ease-out;
+	cursor: ${(props) => (props.disabled ? "not-allowed" : "pointer")};
+	opacity: ${(props) => (props.disabled ? 0.5 : 1)};
+	background-color: ${(props) =>
+		props.selected ? props.theme.color.dark[2] : "transparent"};
+	&:hover {
+		background-color: ${(props) =>
+			!props.disabled
+				? props.selected
+					? props.theme.color.dark[2]
+					: props.theme.color.dark[3]
+				: "transparent"};
+	}
+`;
+
+const DropSlidCont = styled.div`
+	position: relative;
+	margin: 0 10px;
+	color: ${(props) => props.theme.color.white};
+`;
+
+const DropButton = styled.a`
+	display: flex;
+	align-items: center;
+	padding: 5px 10px;
+	border-radius: 5px;
+	background-color: ${(props) => props.theme.color.dark[2]};
+	cursor: pointer;
+`;
+
+const ArrowIcon = styled.div`
+	transition: all 0.2s ease-out;
+	transform: rotate(${(props) => (props.selected ? "180deg" : "0deg")})
+		scale(0.8);
+`;
+
+const ShareText = styled.h4`
+	margin: 0 0 0 10px;
+	transform: translateY(-2px);
+	font-weight: ${(props) => props.theme.typography.semibold};
+`;
+
+const DropMenu = styled.div`
+	position: absolute;
+	left: 50%;
+	margin: 10px 0px;
+	padding: 10px 0;
+	width: 200px;
+	border-radius: 5px;
+	background-color: ${(props) => props.theme.color.dark[1]};
+	transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+	visibility: ${(props) => (props.selected ? "visible" : "hidden")};
+	opacity: ${(props) => (props.selected ? "1" : "0")};
+	transform: translateY(${(props) => (props.selected ? "0" : "2rem")})
+		translateX(-50%);
+`;
+
+const DropMenuItem = styled.button`
+	display: flex;
+	align-items: center;
+	height: 3rem;
+	width: 100%;
+	padding: 20px 10px;
+	border: none;
+	cursor: pointer;
+	transition: all 0.1s ease-out;
+	background-color: ${(props) =>
+		props.selected ? props.theme.color.dark[2] : "transparent"};
+	color: ${(props) => props.theme.color.white};
+
+	&:hover {
+		background-color: ${(props) =>
+			props.selected
+				? props.theme.color.dark[2]
+				: props.theme.color.dark[3]};
+	}
+`;
+
+const HOTKEYS = {
+	"mod+b": "bold",
+	"mod+i": "italic",
+	"mod+u": "underline",
+	"mod+`": "code",
+};
+
+const formatMenu = [
+	{
+		id: "bold",
+		text: "Bold",
+	},
+	{
+		id: "italic",
+		text: "Italics",
+	},
+	{
+		id: "underline",
+		text: "Underline",
+	},
+	{
+		id: "bulleted-list",
+		text: "Bullets",
+	},
+	{
+		id: "numbered-list",
+		text: "NumberedList",
+	},
+	{
+		id: "align center",
+		text: "AlignCenter",
+	},
+];
+
+const initialValue = [
+	{
+		type: "paragraph",
+		children: [
+			{ text: "This is editable " },
+			{ text: "rich", bold: true },
+			{ text: " text, " },
+			{ text: "much", italic: true },
+			{ text: " better than a " },
+			{ text: "<textarea>", code: true },
+			{ text: "!" },
+		],
+	},
+];
+
+export default function Note({ shapeProps, isSelected, draggedNote, text }) {
+	const EditorRef = useRef(null);
+	const DraggableRef = useRef(null);
+	const dispatch = useDispatch();
+	const transition = useTransition(isSelected, {
+		from: { top: 30, opacity: 0 },
+		enter: { top: 80, opacity: 1 },
+		leave: { top: 130, opacity: 0 },
+		trail: 300,
+		config: config.gentle,
+	});
+
+	const [overflowTrigger, setOverflowTrigger] = useState(false);
+
+	const [value, setValue] = useState(initialValue);
+	const renderLeaf = useCallback((props) => <Leaf {...props} />);
+	const renderElement = useCallback((props) => <Element {...props} />, []);
+	const editor = useMemo(() => withHistory(withReact(createEditor())), []);
+
+	const themeContext = useContext(ThemeContext);
+
+	const note = {
+		background: themeContext.color.dark[2],
+		borderRadius: "5px",
+		display: "flex",
+		transition: "box-shadow 0.2s ease-out",
 	};
 
 	return (
-		<>
-			<Group
-				name="note"
-				ref={group}
-				id={shapeProps.id}
-				width={shapeProps.width}
-				height={shapeHeight}
-				x={shapeProps.x}
-				y={shapeProps.y}
-				onClick={onSelect}
-				onTap={onSelect}
-				draggable
-				onDragStart={() => {
-					group.current.zIndex(100);
-					changeBeingDragged(true);
+		<Slate
+			editor={editor}
+			value={value}
+			onChange={(newValue) => setValue(newValue)}
+		>
+			{transition((style, item) =>
+				item ? (
+					<FormatBar isMarkActive={isMarkActive} style={style} />
+				) : null
+			)}
+			<Rnd
+				ref={DraggableRef}
+				bounds={"parent"}
+				size={{ width: shapeProps.width }}
+				position={{ x: shapeProps.x, y: shapeProps.y }}
+				style={note}
+				minWidth={300}
+				minHeight={60}
+				resizeHandleStyles={{
+					bottomRight: {
+						width: "10px",
+						height: "10px",
+						right: "-5px",
+						bottom: "-5px",
+						backgroundColor: isSelected && "#ffffff",
+						transition: "0.1s ease-out",
+						borderRadius: "10px",
+					},
 				}}
-				onDragEnd={(e) => {
-					changeBeingDragged(false);
-					onChange({
-						...shapeProps,
-						x: e.target.x(),
-						y: e.target.y(),
-					});
+				enableResizing={{
+					top: false,
+					right: false,
+					bottom: false,
+					left: false,
+					topRight: false,
+					bottomRight: true,
+					bottomLeft: false,
+					topLeft: false,
 				}}
-			>
-				{shapeHeight + 10 < textAreaHeight && (
-					<Html divProps={{ style: { pointerEvents: "none" } }}>
-						<div
-							style={{
-								zIndex: 1,
-								width: shapeProps.width,
-								height: shapeHeight,
-								background:
-									"linear-gradient(0deg, rgba(96,96,96,1) 5%, rgba(9,9,121,0) 27%)",
-								borderRadius: "5px",
-							}}
-						></div>
-					</Html>
-				)}
-				<Rect
-					ref={shapeRef}
-					width={shapeProps.width}
-					height={shapeHeight}
-					fill={shapeProps.fill}
-					cornerRadius={5}
-					shadowColor={"#111111"}
-					shadowBlur={beingDragged ? 40 : 5}
-					stroke={isSelected ? "#ffffff" : "transparent"}
-					strokeWidth={2}
-					strokeScaleEnabled={false}
-					onTransform={() => {
-						const node = shapeRef.current;
-						const scaleX = node.scaleX();
-						const scaleY = node.scaleY();
-
-						textArea.current.focus();
-
-						changeTextAreaHeight(textArea.current.scrollHeight + 15);
-
-						node.scaleX(1);
-						node.scaleY(1);
-						onChange({
+				onClick={() => {
+					if (shapeProps.height < EditorRef.current.offsetHeight + 30) {
+						dispatch(
+							UPDATE_NOTESET({
+								...shapeProps,
+								height: EditorRef.current.offsetHeight + 30,
+							})
+						);
+					}
+					dispatch(SELECT_NOTE(shapeProps.id));
+					ReactEditor.focus(editor);
+				}}
+				onDragStart={() => dispatch(DRAG_NOTE(shapeProps.id))}
+				onDragStop={(e, d) => {
+					dispatch(
+						UPDATE_NOTESET({
 							...shapeProps,
-							width: Math.max(5, node.width() * scaleX),
-							height: Math.max(node.height() * scaleY),
-						});
-						changeShapeHeight(shapeProps.height);
-					}}
-				/>
-				{isSelected ? (
-					<Html>
-						<textarea
-							autoFocus={true}
-							ref={textArea}
-							value={inputText}
-							placeholder={"Type here..."}
-							style={{
-								margin: "16px 0 0 18px",
-								fontSize: 20,
-								color: "#ffffff",
-								background: "none",
-								border: "none",
-								outline: "none",
-								fontFamily: "Open Sans",
-								overflow: "hidden",
-								resize: "none",
-								width: shapeProps.width - 40,
-								height: shapeHeight - 25,
-								lineHeight: 25 + "px",
+							x: d.x,
+							y: d.y,
+						})
+					);
+					setTimeout(() => dispatch(DRAG_NOTE(shapeProps.id)), 1000);
+				}}
+				onResize={(e, direction, ref, delta, position) => {
+					if (ref.offsetHeight < EditorRef.current.offsetHeight + 30)
+						setOverflowTrigger(true);
+					else setOverflowTrigger(false);
+				}}
+				onResizeStop={(e, direction, ref, delta, position) => {
+					dispatch(
+						UPDATE_NOTESET({
+							...shapeProps,
+							width: ref.offsetWidth,
+							height: ref.offsetHeight,
+						})
+					);
+				}}
+				disableDragging={isSelected}
+			>
+				<NoteTop
+					draggedNote={draggedNote}
+					isSelected={isSelected}
+				></NoteTop>
+				<NoteOverflow overflow={overflowTrigger}></NoteOverflow>
+				<EditorContainer width={shapeProps.width}>
+					<EditorTextContainer ref={EditorRef}>
+						<Editable
+							placeholder="Write something..."
+							autoFocus
+							renderLeaf={renderLeaf}
+							renderElement={renderElement}
+							decorate={([node, path]) => {
+								if (editor.selection != null) {
+									if (
+										!Editor.isEditor(node) &&
+										Editor.string(editor, [path[0]]) === "" &&
+										Range.includes(editor.selection, path) &&
+										Range.isCollapsed(editor.selection)
+									) {
+										return [
+											{
+												...editor.selection,
+												placeholder: true,
+											},
+										];
+									}
+								}
+								return [];
 							}}
-							onChange={(e) => {
-								changeText(e.target.value);
-								changeTextAreaHeight(
-									textArea.current.scrollHeight + 15
-								);
-
-								changeInputTextRows(
-									Math.ceil(
-										calculateTextAreaHeight(textArea.current, 25) / 25
-									)
-								);
-
-								onChange({
-									...shapeProps,
-									height:
-										Math.abs(25 * inputTextRows) < 60
-											? 60
-											: 15 + Math.abs(25 * inputTextRows),
-								});
-
-								changeShapeHeight(shapeProps.height);
+							onKeyDown={(event) => {
+								for (const hotkey in HOTKEYS) {
+									if (isHotkey(hotkey, event)) {
+										event.preventDefault();
+										const mark = HOTKEYS[hotkey];
+										toggleMark(editor, mark);
+									}
+								}
 							}}
 						/>
-					</Html>
-				) : (
-					<Text
-						text={inputText === "" ? "Type here..." : inputText}
-						y={20}
-						x={20}
-						fontFamily={"Open Sans"}
-						fontSize={20}
-						fontStyle={inputText === "" ? "normal 300" : "normal"}
-						lineHeight={1.25}
-						width={shapeProps.width - 40}
-						height={shapeHeight - 20}
-						fill={inputText !== "" ? "#ffffff" : "#D6D6D6"}
-					/>
-				)}
-			</Group>
-			{isSelected && (
-				<Transformer
-					ref={trRef}
-					rotateEnabled={false}
-					keepRatio={false}
-					flipEnabled={false}
-					anchorFill={"transparent"}
-					anchorSize={5}
-					enabledAnchors={["bottom-right"]}
-					borderEnabled={false}
-					boundBoxFunc={(oldBox, newBox) => {
-						if (newBox.width < 200 || newBox.height < 60) {
-							return oldBox;
-						}
-						return newBox;
-					}}
-				/>
-			)}
-		</>
+					</EditorTextContainer>
+				</EditorContainer>
+			</Rnd>
+		</Slate>
+	);
+}
+
+const FormatBar = ({ style }) => {
+	return (
+		<FormatCont style={style}>
+			<FormatBox>
+				<StyleSelector />
+				<TextEditor isMarkActive={isMarkActive} />
+			</FormatBox>
+		</FormatCont>
 	);
 };
 
-export default function Note({
-	shapeProps,
-	isSelected,
-	onSelect,
-	onChange,
-	text,
-}) {
+function TextEditor() {
+	const editor = useSlate();
+
+	function loadComponent(name) {
+		const Component = React.lazy(() =>
+			import(`../../assets/icons/${name}.svg`)
+		);
+		return Component;
+	}
+
+	{
+		return formatMenu.map((item) => {
+			const Component = loadComponent(item.id);
+			return (
+				<Suspense fallback={<div>Loading...</div>}>
+					{item.id !== "numbered-list" && item.id !== "bulleted-list" ? (
+						item.id === "bold" ? (
+							<IconCont
+								selected={isMarkActive(editor, item.id)}
+								disabled={
+									isBlockActive(editor, "normalheader") ||
+									isBlockActive(editor, "largeheader")
+								}
+								onMouseDown={(event) => {
+									console.log("chicken");
+									event.preventDefault();
+									if (
+										!isBlockActive(editor, "normalheader") &&
+										!isBlockActive(editor, "largeheader")
+									) {
+										toggleMark(editor, item.id);
+									}
+								}}
+							>
+								<Component />
+							</IconCont>
+						) : (
+							<IconCont
+								selected={isMarkActive(editor, item.id)}
+								onMouseDown={(event) => {
+									event.preventDefault();
+									toggleMark(editor, item.id);
+								}}
+							>
+								<Component />
+							</IconCont>
+						)
+					) : (
+						<IconCont
+							selected={isBlockActive(editor, item.id)}
+							onMouseDown={(event) => {
+								event.preventDefault();
+								toggleBlock(editor, item.id);
+							}}
+						>
+							<Component />
+						</IconCont>
+					)}
+				</Suspense>
+			);
+		});
+	}
+}
+
+function StyleSelector() {
+	const editor = useSlate();
+	const menu = [
+		{
+			id: "largeheader",
+			text: "Large Header",
+			el: "h3",
+			fontFamily: "Bitter",
+			weight: 600,
+			selected: true,
+		},
+		{
+			id: "normalheader",
+			text: "Normal Header",
+			el: "h4",
+			fontFamily: "Bitter",
+			weight: 600,
+			selected: false,
+		},
+		{
+			id: "normaltext",
+			text: "Normal Text",
+			el: "h5",
+			fontFamily: "Open Sans",
+			weight: 400,
+			selected: false,
+		},
+		{
+			id: "smalltext",
+			text: "Small Text",
+			el: "h6",
+			fontFamily: "Open Sans",
+			weight: 400,
+			selected: false,
+		},
+	];
+
+	const dropdown = useRef(null);
+	const [open, setOpen] = React.useState(false);
+	const [selectedTextStyle, setSelectedTextStyle] =
+		React.useState("Normal Text");
+
+	function useOutsideAlerter(ref) {
+		React.useEffect(() => {
+			menu.map((item) => {
+				if (isBlockActive(editor, item.id)) setSelectedTextStyle(item.text);
+			});
+			function handleClickOutside(event) {
+				if (ref.current && !ref.current.contains(event.target)) {
+					setOpen(false);
+				}
+			}
+
+			document.addEventListener("mousedown", handleClickOutside);
+			return () => {
+				document.removeEventListener("mousedown", handleClickOutside);
+			};
+		}, [ref]);
+	}
+
+	useOutsideAlerter(dropdown);
+
 	return (
-		<Rectangle
-			shapeProps={shapeProps}
-			isSelected={isSelected}
-			onSelect={onSelect}
-			onChange={onChange}
-			text={text}
-		/>
+		<DropSlidCont ref={dropdown}>
+			<DropButton
+				onMouseDown={(event) => {
+					event.preventDefault();
+					setOpen(!open);
+				}}
+			>
+				<ArrowIcon selected={open}>
+					<Down />
+				</ArrowIcon>
+				<ShareText>{selectedTextStyle}</ShareText>
+			</DropButton>
+			<DropMenu selected={open}>
+				{menu.map((item, index) => {
+					const Tag = item.el;
+					return (
+						<DropMenuItem
+							key={item.id}
+							selected={isBlockActive(editor, item.id)}
+							onMouseDown={(event) => {
+								event.preventDefault();
+								toggleBlock(editor, item.id);
+								selectedTextStyle !== item.text
+									? setSelectedTextStyle(item.text)
+									: setSelectedTextStyle("Normal Text");
+							}}
+						>
+							<Tag
+								style={{
+									margin: 0,
+									fontWeight: item.weight,
+									fontFamily: item.fontFamily,
+								}}
+							>
+								{item.text}
+							</Tag>
+						</DropMenuItem>
+					);
+				})}
+			</DropMenu>
+		</DropSlidCont>
 	);
 }
+
+const Element = ({ attributes, children, element }) => {
+	switch (element.type) {
+		case "bulleted-list":
+			return (
+				<ul
+					style={{
+						listStyle: "outside disc",
+						margin: "1rem 0",
+						padding: "0 0 0 2rem",
+						color: "white",
+						fontSize: "20px",
+						lineHeight: 1.3,
+					}}
+					{...attributes}
+				>
+					{children}
+				</ul>
+			);
+		case "largeheader":
+			return (
+				<h3
+					style={{ fontFamily: "Bitter", fontWeight: 600 }}
+					{...attributes}
+				>
+					{children}
+				</h3>
+			);
+		case "normalheader":
+			return (
+				<h4
+					style={{ fontFamily: "Bitter", fontWeight: 600 }}
+					{...attributes}
+				>
+					{children}
+				</h4>
+			);
+		case "smalltext":
+			return (
+				<h6
+					style={{ fontFamily: "Open Sans, sans-serif", fontWeight: 400 }}
+					{...attributes}
+				>
+					{children}
+				</h6>
+			);
+		case "list-item":
+			return <li {...attributes}>{children}</li>;
+		case "numbered-list":
+			return (
+				<ol
+					style={{
+						margin: "1rem 0",
+						padding: "0 0 0 2rem",
+						color: "white",
+						fontSize: "20px",
+						lineHeight: 1.3,
+					}}
+					{...attributes}
+				>
+					{children}
+				</ol>
+			);
+		default:
+			return (
+				<h5
+					style={{
+						margin: 0,
+						fontFamily: "Open Sans, Sans Serif",
+						fontSize: "1.414rem",
+						lineHeight: 1.3,
+						fontFamily: "Open Sans, sans-serif",
+						fontWeight: 400,
+					}}
+					{...attributes}
+				>
+					{children}
+				</h5>
+			);
+	}
+};
+
+const Leaf = ({ attributes, children, leaf }) => {
+	if (leaf.bold) {
+		children = <strong>{children}</strong>;
+	}
+
+	if (leaf.italic) {
+		children = <em>{children}</em>;
+	}
+
+	if (leaf.underline) {
+		children = <u>{children}</u>;
+	}
+
+	return (
+		<span
+			style={{
+				color: "#ffffff",
+				lineHeight: 1.3,
+				fontFamily: "inherit",
+			}}
+			{...attributes}
+		>
+			{children}
+		</span>
+	);
+};
+
+const LIST_TYPES = ["numbered-list", "bulleted-list"];
+
+const isBlockActive = (editor, format) => {
+	const [match] = Editor.nodes(editor, {
+		match: (n) => n.type === format,
+	});
+	return !!match;
+};
+
+const isMarkActive = (editor, format) => {
+	const marks = Editor.marks(editor);
+	return marks ? marks[format] === true : false;
+};
+
+const toggleBlock = (editor, format) => {
+	const isActive = isBlockActive(editor, format);
+	const isList = LIST_TYPES.includes(format);
+
+	Transforms.unwrapNodes(editor, {
+		match: (n) => LIST_TYPES.includes(n.type),
+		split: true,
+	});
+
+	Transforms.setNodes(editor, {
+		type: isActive ? "paragraph" : isList ? "list-item" : format,
+	});
+
+	if (!isActive && isList) {
+		const block = { type: format, children: [] };
+		Transforms.wrapNodes(editor, block);
+	}
+};
+
+const toggleMark = (editor, format) => {
+	const isActive = isMarkActive(editor, format);
+
+	if (isActive) {
+		Editor.removeMark(editor, format);
+	} else {
+		Editor.addMark(editor, format, true);
+	}
+};
