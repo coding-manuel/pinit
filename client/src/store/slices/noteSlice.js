@@ -9,7 +9,7 @@ const initialState = {
 			width: 300,
 			height: 60,
 			fill: "#606060",
-			text: "",
+			content: '[{"type":"normaltext","children":[{"text":""}]}]',
 		},
 		{
 			id: "rect2",
@@ -18,7 +18,7 @@ const initialState = {
 			width: 300,
 			height: 60,
 			fill: "#606060",
-			text: "Chicken is great",
+			content: '[{"type":"normaltext","children":[{"text":""}]}]',
 		},
 		{
 			id: "rect3",
@@ -27,7 +27,7 @@ const initialState = {
 			width: 300,
 			height: 60,
 			fill: "#606060",
-			text: "Chicken is great",
+			content: '[{"type":"normaltext","children":[{"text":""}]}]',
 		},
 		{
 			id: "rect4",
@@ -36,7 +36,7 @@ const initialState = {
 			width: 300,
 			height: 60,
 			fill: "#606060",
-			text: "Chicken is great",
+			content: '[{"type":"normaltext","children":[{"text":""}]}]',
 		},
 	],
 	selectedNote: [],

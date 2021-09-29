@@ -63,9 +63,8 @@ const FormatCont = styled(animated.div)`
 	left: 50%;
 	height: 50px;
 	background-color: ${(props) => props.theme.color.dark[1]};
-	box-shadow: 0 11px 15px -7px rgba(51, 61, 78, 0.2),
-		0 9px 46px 8px rgba(51, 61, 78, 0.12),
-		0 24px 38px 3px rgba(51, 61, 78, 0.14);
+	box-shadow: 0 11px 15px -7px rgba(0, 0, 0, 0.2),
+		0 9px 46px 8px rgba(0, 0, 0, 0.12), 0 24px 38px 3px rgba(0, 0, 0, 0.14);
 	border-radius: 5px;
 	display: flex;
 	align-items: center;
@@ -168,7 +167,6 @@ const HOTKEYS = {
 	"mod+b": "bold",
 	"mod+i": "italic",
 	"mod+u": "underline",
-	"mod+`": "code",
 };
 
 const formatMenu = [
@@ -193,27 +191,12 @@ const formatMenu = [
 		text: "NumberedList",
 	},
 	{
-		id: "align center",
+		id: "centre-align",
 		text: "AlignCenter",
 	},
 ];
 
-const initialValue = [
-	{
-		type: "paragraph",
-		children: [
-			{ text: "This is editable " },
-			{ text: "rich", bold: true },
-			{ text: " text, " },
-			{ text: "much", italic: true },
-			{ text: " better than a " },
-			{ text: "<textarea>", code: true },
-			{ text: "!" },
-		],
-	},
-];
-
-export default function Note({ shapeProps, isSelected, draggedNote, text }) {
+export default function Note({ shapeProps, isSelected, draggedNote }) {
 	const EditorRef = useRef(null);
 	const DraggableRef = useRef(null);
 	const dispatch = useDispatch();
@@ -227,7 +210,15 @@ export default function Note({ shapeProps, isSelected, draggedNote, text }) {
 
 	const [overflowTrigger, setOverflowTrigger] = useState(false);
 
-	const [value, setValue] = useState(initialValue);
+	const [value, setValue] = useState(
+		JSON.parse(shapeProps.content) || [
+			{
+				type: "paragraph",
+				children: [{ text: "A line of text in a paragraph." }],
+			},
+		]
+	);
+
 	const renderLeaf = useCallback((props) => <Leaf {...props} />);
 	const renderElement = useCallback((props) => <Element {...props} />, []);
 	const editor = useMemo(() => withHistory(withReact(createEditor())), []);
@@ -245,7 +236,10 @@ export default function Note({ shapeProps, isSelected, draggedNote, text }) {
 		<Slate
 			editor={editor}
 			value={value}
-			onChange={(newValue) => setValue(newValue)}
+			onChange={(newValue) => {
+				setValue(newValue);
+				console.log(JSON.stringify(value));
+			}}
 		>
 			{transition((style, item) =>
 				item ? (
@@ -293,8 +287,12 @@ export default function Note({ shapeProps, isSelected, draggedNote, text }) {
 					dispatch(SELECT_NOTE(shapeProps.id));
 					ReactEditor.focus(editor);
 				}}
-				onDragStart={() => dispatch(DRAG_NOTE(shapeProps.id))}
-				onDragStop={(e, d) => {
+				onDragStart={(event) => {
+					event.preventDefault();
+					dispatch(DRAG_NOTE(shapeProps.id));
+				}}
+				onDragStop={(event, d) => {
+					event.preventDefault();
 					dispatch(
 						UPDATE_NOTESET({
 							...shapeProps,
@@ -302,7 +300,7 @@ export default function Note({ shapeProps, isSelected, draggedNote, text }) {
 							y: d.y,
 						})
 					);
-					setTimeout(() => dispatch(DRAG_NOTE(shapeProps.id)), 1000);
+					dispatch(DRAG_NOTE([]));
 				}}
 				onResize={(e, direction, ref, delta, position) => {
 					if (ref.offsetHeight < EditorRef.current.offsetHeight + 30)
@@ -402,13 +400,31 @@ function TextEditor() {
 									isBlockActive(editor, "largeheader")
 								}
 								onMouseDown={(event) => {
-									console.log("chicken");
 									event.preventDefault();
 									if (
 										!isBlockActive(editor, "normalheader") &&
 										!isBlockActive(editor, "largeheader")
 									) {
 										toggleMark(editor, item.id);
+									}
+								}}
+							>
+								<Component />
+							</IconCont>
+						) : item.id === "centre-align" ? (
+							<IconCont
+								selected={isMarkActive(editor, item.id)}
+								disabled={
+									isBlockActive(editor, "bulleted-list") ||
+									isBlockActive(editor, "numbered-list")
+								}
+								onMouseDown={(event) => {
+									event.preventDefault();
+									if (
+										!isBlockActive(editor, "bulleted-list") &&
+										!isBlockActive(editor, "numbered-list")
+									) {
+										toggleBlock(editor, item.id);
 									}
 								}}
 							>
@@ -551,6 +567,8 @@ function StyleSelector() {
 
 const Element = ({ attributes, children, element }) => {
 	switch (element.type) {
+		case "list-item":
+			return <li {...attributes}>{children}</li>;
 		case "bulleted-list":
 			return (
 				<ul
@@ -558,14 +576,31 @@ const Element = ({ attributes, children, element }) => {
 						listStyle: "outside disc",
 						margin: "1rem 0",
 						padding: "0 0 0 2rem",
-						color: "white",
-						fontSize: "20px",
-						lineHeight: 1.3,
+						color: "#ffffff",
 					}}
 					{...attributes}
 				>
 					{children}
 				</ul>
+			);
+		case "numbered-list":
+			return (
+				<ol
+					style={{
+						margin: "1rem 0",
+						padding: "0 0 0 2rem",
+						color: "#ffffff",
+					}}
+					{...attributes}
+				>
+					{children}
+				</ol>
+			);
+		case "centre-align":
+			return (
+				<div style={{ textAlign: "center" }} {...attributes}>
+					{children}
+				</div>
 			);
 		case "largeheader":
 			return (
@@ -594,32 +629,13 @@ const Element = ({ attributes, children, element }) => {
 					{children}
 				</h6>
 			);
-		case "list-item":
-			return <li {...attributes}>{children}</li>;
-		case "numbered-list":
-			return (
-				<ol
-					style={{
-						margin: "1rem 0",
-						padding: "0 0 0 2rem",
-						color: "white",
-						fontSize: "20px",
-						lineHeight: 1.3,
-					}}
-					{...attributes}
-				>
-					{children}
-				</ol>
-			);
 		default:
 			return (
 				<h5
 					style={{
 						margin: 0,
 						fontFamily: "Open Sans, Sans Serif",
-						fontSize: "1.414rem",
 						lineHeight: 1.3,
-						fontFamily: "Open Sans, sans-serif",
 						fontWeight: 400,
 					}}
 					{...attributes}
@@ -647,8 +663,9 @@ const Leaf = ({ attributes, children, leaf }) => {
 		<span
 			style={{
 				color: "#ffffff",
-				lineHeight: 1.3,
+				fontSize: "1.414rem",
 				fontFamily: "inherit",
+				lineHeight: 1.3,
 			}}
 			{...attributes}
 		>

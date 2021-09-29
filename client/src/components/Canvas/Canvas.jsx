@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { UPDATE_NOTESET, SELECT_NOTE } from "../../store/slices/noteSlice";
 import styled from "styled-components";
@@ -40,7 +40,6 @@ export default function App() {
 				return (
 					<Note
 						shapeProps={rect}
-						text={rect.text}
 						isSelected={selectedNote.includes(rect.id)}
 						draggedNote={draggedNote.includes(rect.id)}
 					/>
