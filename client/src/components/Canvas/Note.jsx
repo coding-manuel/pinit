@@ -238,7 +238,6 @@ export default function Note({ shapeProps, isSelected, draggedNote }) {
 			value={value}
 			onChange={(newValue) => {
 				setValue(newValue);
-				console.log(JSON.stringify(value));
 			}}
 		>
 			{transition((style, item) =>
@@ -467,7 +466,6 @@ function StyleSelector() {
 			el: "h3",
 			fontFamily: "Bitter",
 			weight: 600,
-			selected: true,
 		},
 		{
 			id: "normalheader",
@@ -475,7 +473,6 @@ function StyleSelector() {
 			el: "h4",
 			fontFamily: "Bitter",
 			weight: 600,
-			selected: false,
 		},
 		{
 			id: "normaltext",
@@ -483,7 +480,6 @@ function StyleSelector() {
 			el: "h5",
 			fontFamily: "Open Sans",
 			weight: 400,
-			selected: false,
 		},
 		{
 			id: "smalltext",
@@ -491,7 +487,6 @@ function StyleSelector() {
 			el: "h6",
 			fontFamily: "Open Sans",
 			weight: 400,
-			selected: false,
 		},
 	];
 
@@ -503,7 +498,7 @@ function StyleSelector() {
 	function useOutsideAlerter(ref) {
 		React.useEffect(() => {
 			menu.map((item) => {
-				if (isBlockActive(editor, item.id)) setSelectedTextStyle(item.text);
+				if (isMarkActive(editor, item.id)) setSelectedTextStyle(item.text);
 			});
 			function handleClickOutside(event) {
 				if (ref.current && !ref.current.contains(event.target)) {
@@ -539,10 +534,10 @@ function StyleSelector() {
 					return (
 						<DropMenuItem
 							key={item.id}
-							selected={isBlockActive(editor, item.id)}
+							selected={isMarkActive(editor, item.id)}
 							onMouseDown={(event) => {
 								event.preventDefault();
-								toggleBlock(editor, item.id);
+								addText(editor, item.id);
 								selectedTextStyle !== item.text
 									? setSelectedTextStyle(item.text)
 									: setSelectedTextStyle("Normal Text");
@@ -602,47 +597,8 @@ const Element = ({ attributes, children, element }) => {
 					{children}
 				</div>
 			);
-		case "largeheader":
-			return (
-				<h3
-					style={{ fontFamily: "Bitter", fontWeight: 600 }}
-					{...attributes}
-				>
-					{children}
-				</h3>
-			);
-		case "normalheader":
-			return (
-				<h4
-					style={{ fontFamily: "Bitter", fontWeight: 600 }}
-					{...attributes}
-				>
-					{children}
-				</h4>
-			);
-		case "smalltext":
-			return (
-				<h6
-					style={{ fontFamily: "Open Sans, sans-serif", fontWeight: 400 }}
-					{...attributes}
-				>
-					{children}
-				</h6>
-			);
 		default:
-			return (
-				<h5
-					style={{
-						margin: 0,
-						fontFamily: "Open Sans, Sans Serif",
-						lineHeight: 1.3,
-						fontWeight: 400,
-					}}
-					{...attributes}
-				>
-					{children}
-				</h5>
-			);
+			return <span {...attributes}>{children}</span>;
 	}
 };
 
@@ -659,13 +615,32 @@ const Leaf = ({ attributes, children, leaf }) => {
 		children = <u>{children}</u>;
 	}
 
+	if (leaf.largeheader) {
+		children = (
+			<h3 style={{ fontFamily: "Bitter", fontWeight: 600 }}>{children}</h3>
+		);
+	}
+
+	if (leaf.normalheader) {
+		children = (
+			<h4 style={{ fontFamily: "Bitter", fontWeight: 600 }}>{children}</h4>
+		);
+	}
+
+	if (leaf.smalltext) {
+		children = <h6>{children}</h6>;
+	}
+
+	if (leaf.normaltext) {
+		<h5 {...attributes}>{children}</h5>;
+	}
+
 	return (
 		<span
 			style={{
 				color: "#ffffff",
 				fontSize: "1.414rem",
-				fontFamily: "inherit",
-				lineHeight: 1.3,
+				fontFamily: "Open Sans, Sans-Serif",
 			}}
 			{...attributes}
 		>
@@ -715,4 +690,13 @@ const toggleMark = (editor, format) => {
 	} else {
 		Editor.addMark(editor, format, true);
 	}
+};
+
+const addText = (editor, format) => {
+	const isActive = isMarkActive(editor, format);
+	const styles = ["largeheader", "normalheader", "normaltext", "smalltext"];
+
+	styles.map((style) => Editor.removeMark(editor, style));
+
+	Editor.addMark(editor, format, true);
 };

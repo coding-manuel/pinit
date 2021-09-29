@@ -4,13 +4,13 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node src/index.js",
-    "dev": "nodemon src/index.js",
+    "dev": "concurrently \"nodemon src/index.js\" \"cd .. && cd client && npm start\"",
     "lint": "eslint src/"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "concurrently": "^6.2.2",
     "cors": "^2.8.5",
     "express": "^4.17.1",
     "helmet": "^4.6.0",

@@ -36,12 +36,12 @@ export default function App() {
 			onTouchStart={checkDeselect}
 		>
 			{/* <Grid></Grid> */}
-			{noteSet.map((rect) => {
+			{noteSet.map((note) => {
 				return (
 					<Note
-						shapeProps={rect}
-						isSelected={selectedNote.includes(rect.id)}
-						draggedNote={draggedNote.includes(rect.id)}
+						shapeProps={note}
+						isSelected={selectedNote.includes(note.id)}
+						draggedNote={draggedNote.includes(note.id)}
 					/>
 				);
 			})}
