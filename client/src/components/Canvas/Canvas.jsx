@@ -1,6 +1,10 @@
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { UPDATE_NOTESET, SELECT_NOTE } from "../../store/slices/noteSlice";
+import {
+	UPDATE_NOTESET,
+	SELECT_NOTE,
+	fetchNoteSet,
+} from "../../store/slices/noteSlice";
 import styled from "styled-components";
 import Note from "./Note.jsx";
 
@@ -17,11 +21,18 @@ const Grid = styled.div`
 	background-repeat: repeat-y;
 `;
 
-export default function App() {
+export default function Canvas() {
 	const dispatch = useDispatch();
 	const { noteSet, selectedNote, draggedNote } = useSelector(
 		(state) => state.reducer.note
 	);
+
+	React.useEffect(() => {
+		dispatch(fetchNoteSet());
+		return () => {
+			//
+		};
+	}, [dispatch]);
 
 	const checkDeselect = (e) => {
 		if (e.target.id === "stage") {

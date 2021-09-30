@@ -1,42 +1,21 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import APIService from "../../services/api";
+
+export const fetchNoteSet = createAsyncThunk("note/fetchNoteSet", async () => {
+	try {
+		let response = await APIService().get("/notes/fetchAll");
+		return await response.data;
+	} catch (error) {
+		return thunkAPI.rejectWithValue({ error: error.message });
+	}
+});
 
 const initialState = {
-	noteSet: [
-		{
-			id: "rect1",
-			x: 20,
-			y: 50,
-			width: 300,
-			height: 60,
-			content: '[{"children":[{"normaltext":true, "text":""}]}]',
-		},
-		{
-			id: "rect2",
-			x: 150,
-			y: 150,
-			width: 300,
-			height: 60,
-			content: '[{"children":[{"normaltext":true, "text":""}]}]',
-		},
-		{
-			id: "rect3",
-			x: 200,
-			y: 150,
-			width: 300,
-			height: 60,
-			content: '[{"children":[{"normaltext":true, "text":""}]}]',
-		},
-		{
-			id: "rect4",
-			x: 300,
-			y: 150,
-			width: 300,
-			height: 60,
-			content: '[{"children":[{"normaltext":true, "text":""}]}]',
-		},
-	],
+	noteSet: [],
 	selectedNote: [],
 	draggedNote: [],
+	loading: "idle",
+	error: "",
 };
 
 const noteSlice = createSlice({
@@ -67,6 +46,20 @@ const noteSlice = createSlice({
 			state.draggedNote = payload;
 		},
 		FORMAT_NOTE_CONTENT(state, { payload }) {},
+	},
+	extraReducers: (builder) => {
+		builder.addCase(fetchNoteSet.pending, (state) => {
+			state.noteSet = [];
+			state.loading = "loading";
+		});
+		builder.addCase(fetchNoteSet.fulfilled, (state, { payload }) => {
+			state.noteSet = payload;
+			state.loading = "loaded";
+		});
+		builder.addCase(fetchNoteSet.rejected, (state, action) => {
+			state.loading = "error";
+			state.error = action.error.message;
+		});
 	},
 });
 
