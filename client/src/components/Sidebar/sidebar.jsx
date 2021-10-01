@@ -6,54 +6,50 @@ import Link from "../../assets/icons/link.svg";
 import Table from "../../assets/icons/table.svg";
 import File from "../../assets/icons/file.svg";
 import Image from "../../assets/icons/image.svg";
+import  Canvas  from "../Canvas/Canvas.jsx";
 
-// const Icon = styled.div`
-//   background-color: #1f1b10;
-//   position : relative;
-//   top : 20vh;
-//   padding: 10px;
-//   left : 0;
-// `
+
 const Icon = styled.div`
 	display: flex;
 	padding: 10px 0px;
+	transform: scale(0.8);
 	// width:30px;
 	justify-content: center;
 	cursor: pointer;
 	transition: transform 250ms;
 	&:hover {
-		transform: translateY(-5px);
+		transform: translateY(-5px) scale(0.8);
 		opacity: 0.5;
 	}
 `;
 // const WhiteBorad  = styled(Board)`
 //   fill : skyblue;
 // `
-const Text = styled.p`
+const Text = styled.h6`
 	color: white;
 	margin-top: -5px;
 	padding-bottom: 5px;
-	font-size: small;
+	font-size: 10px;
+	font-weight:${(props) => props.theme.typography.semibold};
 	text-align: center;
+	text-decoration: none;
 	&:hover {
 		cursor: pointer;
 	}
 `;
 const Container = styled.div`
-	background-color: #1f1b10;
-	width: 6%;
-	min-width: 70px;
-	height: 70vh;
-	overflow-y: auto;
+	background: ${(props) => props.theme.color.dark[1]};
+	width: 70px;
+	min-width: fit-content;
+	height: fit-content;
 	margin: auto;
 	position: absolute;
 	top: 0;
 	bottom: 0;
-	border: solid black;
 	margin-left: 20px;
-	max-height: 500px;
-	border-radius: 10px;
+	border-radius: 5px;
 	box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.3);
+	padding: 5px 0px;
 `;
 
 function Sidebar() {
@@ -66,23 +62,23 @@ function Sidebar() {
 			<Icon>
 				<Whiteboard />
 			</Icon>
-			<Text>whiteboard</Text>
+			<Text>Whiteboard</Text>
 			<Icon>
 				<Link />
 			</Icon>
-			<Text>link</Text>
+			<Text>Link</Text>
 			<Icon>
 				<Image />
 			</Icon>
-			<Text>image</Text>
+			<Text>Image</Text>
 			<Icon>
 				<File />
 			</Icon>
-			<Text>file</Text>
+			<Text>File</Text>
 			<Icon>
 				<Table />
 			</Icon>
-			<Text>table</Text>
+			<Text>Table</Text>
 			{/* {arr.map((item) => <Icon src={item}/>)} */}
 			{/* <Design
           img = {info[0].imgURL}

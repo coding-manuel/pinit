@@ -3,15 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@reduxjs/toolkit": "^1.6.1",
     "@svgr/webpack": "^5.5.0",
     "@testing-library/jest-dom": "^5.14.1",
     "@testing-library/react": "^11.2.7",
     "@testing-library/user-event": "^12.8.3",
-    "axios": "^0.21.4",
-    "is-hotkey": "^0.2.0",
     "react": "^17.0.2",
+    "@reduxjs/toolkit":"^1.6.1",
     "react-dom": "^17.0.2",
+    "is-hotkey": "^0.2.0",
     "react-redux": "^7.2.5",
     "react-rnd": "^10.3.4",
     "react-scripts": "4.0.3",
@@ -31,12 +30,6 @@
     "eject": "react-scripts eject",
     "lint": "lint ./"
   },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
-  },
   "browserslist": {
     "production": [
       ">0.2%",
@@ -49,13 +42,18 @@
       "last 1 safari version"
     ]
   },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
   "devDependencies": {
     "@babel/cli": "^7.14.8",
     "@babel/core": "^7.15.0",
     "@babel/preset-env": "^7.15.0",
     "babel-core": "^6.26.3",
     "babel-loader": "^8.2.2",
-    "babel-polyfill": "^6.26.0",
     "babel-preset-react": "^6.24.1",
     "css-loader": "^6.2.0",
     "file-loader": "^6.2.0",
