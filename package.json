@@ -7,8 +7,5 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "react-rnd": "^10.3.5"
-  }
+  "license": "ISC"
 }
