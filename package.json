@@ -9,6 +9,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "axios": "^0.22.0",
+    "babel-polyfill": "^6.26.0",
     "react-rnd": "^10.3.5"
   }
 }
