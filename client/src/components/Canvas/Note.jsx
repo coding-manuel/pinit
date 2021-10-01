@@ -16,7 +16,7 @@ import {
 import styled, { ThemeContext } from "styled-components";
 import { Rnd } from "react-rnd";
 import isHotkey from "is-hotkey";
-import { createEditor, Editor, Text, Range, Transforms } from "slate";
+import { createEditor, Editor, Range, Transforms } from "slate";
 import { Slate, Editable, withReact, ReactEditor, useSlate } from "slate-react";
 import { useTransition, config, animated } from "react-spring";
 import { withHistory } from "slate-history";
@@ -26,11 +26,16 @@ const NoteTop = styled.div`
 	position: absolute;
 	height: 100%;
 	width: 100%;
-	transition: 0.1s ease-out;
-	border: 2px solid
-		${(props) => (props.isSelected ? props.theme.color.white : "transparent")};
-	box-shadow: -11px 7px 20px 3px
-		${(props) => (props.draggedNote ? "#222222" : "transparent")};
+	transition: 0.3s ease-out;
+	${(props) =>
+		props.isSelected
+			? "border: 2px solid " + props.theme.color.white
+			: "border: 1px solid " + props.theme.color.dark[3]};
+	${(props) =>
+		props.draggedNote
+			? "box-shadow: -11px 7px 20px 3px #222222"
+			: "box-shadow: none"};
+	background: ${(props) => props.theme.color.dark[2]};
 	border-radius: 5px;
 	pointer-events: ${(props) => (props.isSelected ? "none" : "all")};
 	transform: translate(-2px, -2px);
@@ -69,6 +74,7 @@ const FormatCont = styled(animated.div)`
 	display: flex;
 	align-items: center;
 	transform: translateX(-50%);
+	z-index: 1000;
 `;
 
 const FormatBox = styled.div`
@@ -225,13 +231,6 @@ export default function Note({ shapeProps, isSelected, draggedNote }) {
 
 	const themeContext = useContext(ThemeContext);
 
-	const note = {
-		background: themeContext.color.dark[2],
-		borderRadius: "5px",
-		display: "flex",
-		transition: "box-shadow 0.2s ease-out",
-	};
-
 	return (
 		<Slate
 			editor={editor}
@@ -250,7 +249,10 @@ export default function Note({ shapeProps, isSelected, draggedNote }) {
 				bounds={"parent"}
 				size={{ width: shapeProps.width }}
 				position={{ x: shapeProps.x, y: shapeProps.y }}
-				style={note}
+				style={{
+					display: "flex",
+					zIndex: (draggedNote || isSelected) && 500,
+				}}
 				minWidth={300}
 				minHeight={60}
 				resizeHandleStyles={{
