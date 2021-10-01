@@ -2,6 +2,7 @@ const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const InterpolateHtmlPlugin = require("interpolate-html-plugin");
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
+const webpack = require("webpack");
 
 const config = {
 	mode: "development",
@@ -55,6 +56,10 @@ const config = {
             favicon: "./public/favicon.ico"
         }),
         new InterpolateHtmlPlugin(HtmlWebpackPlugin),
+		new webpack.DefinePlugin({
+			"process.env": "{}",
+			global: {}
+		  })
 	],
 
     optimization: {
