@@ -7,10 +7,5 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "axios": "^0.22.0",
-    "babel-polyfill": "^6.26.0",
-    "react-rnd": "^10.3.5"
-  }
+  "license": "ISC"
 }
