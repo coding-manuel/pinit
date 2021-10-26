@@ -1,4 +1,3 @@
-const bcrypt = require("bcryptjs");
 const localStrategy = require("passport-local");
 const User = require("../models/userSchema");
 
