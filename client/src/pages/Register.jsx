@@ -238,6 +238,7 @@ function Register() {
 		<LoginPage>
 			<Container>
 				<Header>Register</Header>
+				<form onSubmit={register}>
 				<Label>Email Address</Label>
 				<Input
 					placeholder="Email Address"
@@ -264,9 +265,10 @@ function Register() {
 					value={confirmPassword}
 					onChange={(e) => setConfirmPassword(e.target.value)}
 				/>
-				<Button onClick={register}>
+				<Button type="submit">
 					{!isSubmitting ? <>Sign Up</> : <Loader></Loader>}
 				</Button>
+				</form>
 				<SignInPrompt>
 					Already have an account?{" "}
 					<SignInLink to={"/login"}>Log in</SignInLink>
