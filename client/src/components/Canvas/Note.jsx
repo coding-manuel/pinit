@@ -1,36 +1,45 @@
 import React, {
+	useEffect,
 	useMemo,
 	useState,
 	useCallback,
 	useRef,
-	useContext,
 	Suspense,
 } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import {
 	UPDATE_NOTESET,
 	SELECT_NOTE,
 	DRAG_NOTE,
-	FORMAT_NOTE_CONTENT,
+	ADD_NOTE,
+	DELETE_NOTE,
+	REMOVE_NOTE,
 } from "../../store/slices/noteSlice";
-import styled, { ThemeContext } from "styled-components";
+import styled from "styled-components";
 import { Rnd } from "react-rnd";
 import isHotkey from "is-hotkey";
-import { createEditor, Editor, Text, Range, Transforms } from "slate";
+import { createEditor, Editor, Range, Transforms } from "slate";
 import { Slate, Editable, withReact, ReactEditor, useSlate } from "slate-react";
 import { useTransition, config, animated } from "react-spring";
 import { withHistory } from "slate-history";
+import { io } from "../../services/socket";
+
 import Down from "../../assets/icons/down.svg";
 
 const NoteTop = styled.div`
 	position: absolute;
 	height: 100%;
 	width: 100%;
-	transition: 0.1s ease-out;
-	border: 2px solid
-		${(props) => (props.isSelected ? props.theme.color.white : "transparent")};
-	box-shadow: -11px 7px 20px 3px
-		${(props) => (props.draggedNote ? "#222222" : "transparent")};
+	transition: 0.3s ease-out;
+	${(props) =>
+		props.isSelected
+			? "border: 2px solid " + props.theme.color.white
+			: "border: 1px solid " + props.theme.color.dark[3]};
+	${(props) =>
+		props.draggedNote
+			? "box-shadow: -11px 7px 20px 3px #222222"
+			: "box-shadow: none"};
+	background: ${(props) => props.theme.color.dark[2]};
 	border-radius: 5px;
 	pointer-events: ${(props) => (props.isSelected ? "none" : "all")};
 	transform: translate(-2px, -2px);
@@ -63,13 +72,13 @@ const FormatCont = styled(animated.div)`
 	left: 50%;
 	height: 50px;
 	background-color: ${(props) => props.theme.color.dark[1]};
-	box-shadow: 0 11px 15px -7px rgba(51, 61, 78, 0.2),
-		0 9px 46px 8px rgba(51, 61, 78, 0.12),
-		0 24px 38px 3px rgba(51, 61, 78, 0.14);
+	box-shadow: 0 11px 15px -7px rgba(0, 0, 0, 0.2),
+		0 9px 46px 8px rgba(0, 0, 0, 0.12), 0 24px 38px 3px rgba(0, 0, 0, 0.14);
 	border-radius: 5px;
 	display: flex;
 	align-items: center;
 	transform: translateX(-50%);
+	z-index: 1000;
 `;
 
 const FormatBox = styled.div`
@@ -168,7 +177,6 @@ const HOTKEYS = {
 	"mod+b": "bold",
 	"mod+i": "italic",
 	"mod+u": "underline",
-	"mod+`": "code",
 };
 
 const formatMenu = [
@@ -193,27 +201,12 @@ const formatMenu = [
 		text: "NumberedList",
 	},
 	{
-		id: "align center",
+		id: "centre-align",
 		text: "AlignCenter",
 	},
 ];
 
-const initialValue = [
-	{
-		type: "paragraph",
-		children: [
-			{ text: "This is editable " },
-			{ text: "rich", bold: true },
-			{ text: " text, " },
-			{ text: "much", italic: true },
-			{ text: " better than a " },
-			{ text: "<textarea>", code: true },
-			{ text: "!" },
-		],
-	},
-];
-
-export default function Note({ shapeProps, isSelected, draggedNote, text }) {
+export default function Note({ shapeProps, isSelected, draggedNote }) {
 	const EditorRef = useRef(null);
 	const DraggableRef = useRef(null);
 	const dispatch = useDispatch();
@@ -225,27 +218,68 @@ export default function Note({ shapeProps, isSelected, draggedNote, text }) {
 		config: config.gentle,
 	});
 
+	useEffect(() => {
+		io.once("recieveCreateNote", (newNote) => {
+			dispatch(ADD_NOTE(newNote));
+		});
+	}, []);
+
+	useEffect(() => {
+		io.on("recieveNoteDelete", (deleteNoteIndex) => {
+			dispatch(REMOVE_NOTE(deleteNoteIndex));
+		});
+	}, []);
+
+	useEffect(() => {
+		io.on("recieveNoteDrag", (newNote) => {
+			dispatch(UPDATE_NOTESET(newNote));
+		});
+	}, []);
+
+	useEffect(() => {
+		io.on("recieveNoteResize", (newNote) => {
+			dispatch(UPDATE_NOTESET(newNote));
+		});
+	}, []);
+
+	useEffect(() => {
+		io.on("recieveNoteChangeValue", (newNote) => {
+			if (newNote.id === shapeProps.id)
+				setValue(JSON.parse(newNote.content));
+		});
+	}, []);
+
 	const [overflowTrigger, setOverflowTrigger] = useState(false);
 
-	const [value, setValue] = useState(initialValue);
+	const [value, setValue] = useState(
+		JSON.parse(shapeProps.content) || [
+			{
+				type: "paragraph",
+				children: [{ text: "A line of text in a paragraph." }],
+			},
+		]
+	);
+
 	const renderLeaf = useCallback((props) => <Leaf {...props} />);
 	const renderElement = useCallback((props) => <Element {...props} />, []);
 	const editor = useMemo(() => withHistory(withReact(createEditor())), []);
-
-	const themeContext = useContext(ThemeContext);
-
-	const note = {
-		background: themeContext.color.dark[2],
-		borderRadius: "5px",
-		display: "flex",
-		transition: "box-shadow 0.2s ease-out",
-	};
 
 	return (
 		<Slate
 			editor={editor}
 			value={value}
-			onChange={(newValue) => setValue(newValue)}
+			onChange={(newValue) => {
+				setValue(newValue);
+				const isAstChange = editor.operations.some(
+					(op) => "set_selection" !== op.type
+				);
+				if (isAstChange) {
+					io.emit("noteChangeValue", {
+						...shapeProps,
+						content: JSON.stringify(newValue),
+					});
+				}
+			}}
 		>
 			{transition((style, item) =>
 				item ? (
@@ -257,7 +291,10 @@ export default function Note({ shapeProps, isSelected, draggedNote, text }) {
 				bounds={"parent"}
 				size={{ width: shapeProps.width }}
 				position={{ x: shapeProps.x, y: shapeProps.y }}
-				style={note}
+				style={{
+					display: "flex",
+					zIndex: (draggedNote || isSelected) && 500,
+				}}
 				minWidth={300}
 				minHeight={60}
 				resizeHandleStyles={{
@@ -293,8 +330,17 @@ export default function Note({ shapeProps, isSelected, draggedNote, text }) {
 					dispatch(SELECT_NOTE(shapeProps.id));
 					ReactEditor.focus(editor);
 				}}
-				onDragStart={() => dispatch(DRAG_NOTE(shapeProps.id))}
-				onDragStop={(e, d) => {
+				onDragStart={() => {
+					dispatch(DRAG_NOTE(shapeProps.id));
+				}}
+				onDrag={(event, d) => {
+					io.emit("noteDrag", {
+						...shapeProps,
+						x: d.x,
+						y: d.y,
+					});
+				}}
+				onDragStop={(event, d) => {
 					dispatch(
 						UPDATE_NOTESET({
 							...shapeProps,
@@ -302,7 +348,12 @@ export default function Note({ shapeProps, isSelected, draggedNote, text }) {
 							y: d.y,
 						})
 					);
-					setTimeout(() => dispatch(DRAG_NOTE(shapeProps.id)), 1000);
+					io.emit("noteDragStop", {
+						...shapeProps,
+						x: d.x,
+						y: d.y,
+					});
+					dispatch(DRAG_NOTE([]));
 				}}
 				onResize={(e, direction, ref, delta, position) => {
 					if (ref.offsetHeight < EditorRef.current.offsetHeight + 30)
@@ -317,8 +368,18 @@ export default function Note({ shapeProps, isSelected, draggedNote, text }) {
 							height: ref.offsetHeight,
 						})
 					);
+					io.emit("noteResize", {
+						...shapeProps,
+						width: ref.offsetWidth,
+						height: ref.offsetHeight,
+					});
 				}}
 				disableDragging={isSelected}
+				// onKeyUp={(e) => {
+				// 	if (isSelected && e.keyCode === 46) {
+				// 		dispatch(DELETE_NOTE(shapeProps));
+				// 	}
+				// }}
 			>
 				<NoteTop
 					draggedNote={draggedNote}
@@ -403,13 +464,31 @@ function TextEditor() {
 									isBlockActive(editor, "largeheader")
 								}
 								onMouseDown={(event) => {
-									console.log("chicken");
 									event.preventDefault();
 									if (
 										!isBlockActive(editor, "normalheader") &&
 										!isBlockActive(editor, "largeheader")
 									) {
 										toggleMark(editor, item.id);
+									}
+								}}
+							>
+								<Component />
+							</IconCont>
+						) : item.id === "centre-align" ? (
+							<IconCont
+								selected={isMarkActive(editor, item.id)}
+								disabled={
+									isBlockActive(editor, "bulleted-list") ||
+									isBlockActive(editor, "numbered-list")
+								}
+								onMouseDown={(event) => {
+									event.preventDefault();
+									if (
+										!isBlockActive(editor, "bulleted-list") &&
+										!isBlockActive(editor, "numbered-list")
+									) {
+										toggleBlock(editor, item.id);
 									}
 								}}
 							>
@@ -452,7 +531,6 @@ function StyleSelector() {
 			el: "h3",
 			fontFamily: "Bitter",
 			weight: 600,
-			selected: true,
 		},
 		{
 			id: "normalheader",
@@ -460,7 +538,6 @@ function StyleSelector() {
 			el: "h4",
 			fontFamily: "Bitter",
 			weight: 600,
-			selected: false,
 		},
 		{
 			id: "normaltext",
@@ -468,7 +545,6 @@ function StyleSelector() {
 			el: "h5",
 			fontFamily: "Open Sans",
 			weight: 400,
-			selected: false,
 		},
 		{
 			id: "smalltext",
@@ -476,7 +552,6 @@ function StyleSelector() {
 			el: "h6",
 			fontFamily: "Open Sans",
 			weight: 400,
-			selected: false,
 		},
 	];
 
@@ -488,7 +563,7 @@ function StyleSelector() {
 	function useOutsideAlerter(ref) {
 		React.useEffect(() => {
 			menu.map((item) => {
-				if (isBlockActive(editor, item.id)) setSelectedTextStyle(item.text);
+				if (isMarkActive(editor, item.id)) setSelectedTextStyle(item.text);
 			});
 			function handleClickOutside(event) {
 				if (ref.current && !ref.current.contains(event.target)) {
@@ -524,10 +599,10 @@ function StyleSelector() {
 					return (
 						<DropMenuItem
 							key={item.id}
-							selected={isBlockActive(editor, item.id)}
+							selected={isMarkActive(editor, item.id)}
 							onMouseDown={(event) => {
 								event.preventDefault();
-								toggleBlock(editor, item.id);
+								addText(editor, item.id);
 								selectedTextStyle !== item.text
 									? setSelectedTextStyle(item.text)
 									: setSelectedTextStyle("Normal Text");
@@ -552,6 +627,8 @@ function StyleSelector() {
 
 const Element = ({ attributes, children, element }) => {
 	switch (element.type) {
+		case "list-item":
+			return <li {...attributes}>{children}</li>;
 		case "bulleted-list":
 			return (
 				<ul
@@ -559,75 +636,34 @@ const Element = ({ attributes, children, element }) => {
 						listStyle: "outside disc",
 						margin: "1rem 0",
 						padding: "0 0 0 2rem",
-						color: "white",
-						fontSize: "20px",
-						lineHeight: 1.3,
+						color: "#ffffff",
 					}}
 					{...attributes}
 				>
 					{children}
 				</ul>
 			);
-		case "largeheader":
-			return (
-				<h3
-					style={{ fontFamily: "Bitter", fontWeight: 600 }}
-					{...attributes}
-				>
-					{children}
-				</h3>
-			);
-		case "normalheader":
-			return (
-				<h4
-					style={{ fontFamily: "Bitter", fontWeight: 600 }}
-					{...attributes}
-				>
-					{children}
-				</h4>
-			);
-		case "smalltext":
-			return (
-				<h6
-					style={{ fontFamily: "Open Sans, sans-serif", fontWeight: 400 }}
-					{...attributes}
-				>
-					{children}
-				</h6>
-			);
-		case "list-item":
-			return <li {...attributes}>{children}</li>;
 		case "numbered-list":
 			return (
 				<ol
 					style={{
 						margin: "1rem 0",
 						padding: "0 0 0 2rem",
-						color: "white",
-						fontSize: "20px",
-						lineHeight: 1.3,
+						color: "#ffffff",
 					}}
 					{...attributes}
 				>
 					{children}
 				</ol>
 			);
-		default:
+		case "centre-align":
 			return (
-				<h5
-					style={{
-						margin: 0,
-						fontFamily: "Open Sans, Sans Serif",
-						fontSize: "1.414rem",
-						lineHeight: 1.3,
-						fontFamily: "Open Sans, sans-serif",
-						fontWeight: 400,
-					}}
-					{...attributes}
-				>
+				<div style={{ textAlign: "center" }} {...attributes}>
 					{children}
-				</h5>
+				</div>
 			);
+		default:
+			return <span {...attributes}>{children}</span>;
 	}
 };
 
@@ -644,12 +680,32 @@ const Leaf = ({ attributes, children, leaf }) => {
 		children = <u>{children}</u>;
 	}
 
+	if (leaf.largeheader) {
+		children = (
+			<h3 style={{ fontFamily: "Bitter", fontWeight: 600 }}>{children}</h3>
+		);
+	}
+
+	if (leaf.normalheader) {
+		children = (
+			<h4 style={{ fontFamily: "Bitter", fontWeight: 600 }}>{children}</h4>
+		);
+	}
+
+	if (leaf.smalltext) {
+		children = <h6>{children}</h6>;
+	}
+
+	if (leaf.normaltext) {
+		<h5 {...attributes}>{children}</h5>;
+	}
+
 	return (
 		<span
 			style={{
 				color: "#ffffff",
-				lineHeight: 1.3,
-				fontFamily: "inherit",
+				fontSize: "1.414rem",
+				fontFamily: "Open Sans, Sans-Serif",
 			}}
 			{...attributes}
 		>
@@ -699,4 +755,13 @@ const toggleMark = (editor, format) => {
 	} else {
 		Editor.addMark(editor, format, true);
 	}
+};
+
+const addText = (editor, format) => {
+	const isActive = isMarkActive(editor, format);
+	const styles = ["largeheader", "normalheader", "normaltext", "smalltext"];
+
+	styles.map((style) => Editor.removeMark(editor, style));
+
+	Editor.addMark(editor, format, true);
 };

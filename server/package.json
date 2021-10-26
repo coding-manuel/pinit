@@ -2,28 +2,38 @@
   "name": "server",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node src/index.js",
-    "dev": "nodemon src/index.js",
+    "start": "nodemon src/server.js",
+    "dev": "concurrently \"nodemon src/server.js\" \"cd .. && cd client && npm start\"",
+    "data:import": "node src/seederScript.js",
     "lint": "eslint src/"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "concurrently": "^6.2.2",
+    "cookie-parser": "^1.4.5",
     "cors": "^2.8.5",
+    "dotenv": "^10.0.0",
     "express": "^4.17.1",
+    "express-session": "^1.17.2",
     "helmet": "^4.6.0",
-    "mongoose": "^5.13.7",
-    "morgan": "^1.10.0"
+    "js-cookie": "^3.0.1",
+    "jsonwebtoken": "^8.5.1",
+    "local": "^0.3.3",
+    "mongoose": "^5.13.9",
+    "morgan": "^1.10.0",
+    "passport": "^0.5.0",
+    "passport-jwt": "^4.0.0",
+    "passport-local": "^1.0.0",
+    "passport-local-mongoose": "^6.1.0",
+    "session": "^0.1.0",
+    "socket.io": "^4.2.0",
+    "universal-cookie": "^4.0.4"
   },
   "devDependencies": {
-    "eslint": "^7.32.0",
-    "eslint-config-airbnb": "^18.2.1",
-    "eslint-plugin-import": "^2.24.0",
-    "eslint-plugin-jsx-a11y": "^6.4.1",
-    "eslint-plugin-react": "^7.24.0",
-    "eslint-plugin-react-hooks": "^4.2.0",
-    "nodemon": "^2.0.12"
+    "nodemon": "^2.0.14"
   }
 }
