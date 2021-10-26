@@ -1,4 +1,6 @@
 import React from "react";
+import { useHistory } from "react-router";
+import { useSelector } from "react-redux";
 import styled from "styled-components";
 import Logo from "../../assets/logos/pinIT Logo.svg";
 import CreateNavbar from "./CreateNavbar.jsx";
@@ -26,17 +28,29 @@ const NavLink = styled.a`
 	cursor: pointer;
 `;
 
-const Topbar = ({ create }) => (
-	<>
-		<Navbar>
-			<NavLink to="/dashboard">
-				<LogoCont>
-					<Logo />
-				</LogoCont>
-			</NavLink>
-			{create ? <CreateNavbar /> : <DashNavbar />}
-		</Navbar>
-	</>
-);
+const Topbar = ({ create }) => {
+	const history = useHistory();
+	const userID = useSelector((state) => state.reducer.user);
+
+	const handleLogo = () => {
+		history.push({
+			pathname: "/dashboard",
+			search: `?userID=${userID}`,
+			state: { userID: userID },
+		});
+	};
+	return (
+		<>
+			<Navbar>
+				<NavLink to="/dashboard">
+					<LogoCont onClick={handleLogo}>
+						<Logo />
+					</LogoCont>
+				</NavLink>
+				{create ? <CreateNavbar /> : <DashNavbar />}
+			</Navbar>
+		</>
+	);
+};
 
 export default Topbar;
