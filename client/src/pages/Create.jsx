@@ -7,6 +7,11 @@ import Sidebar from "../components/Sidebar/sidebar.jsx";
 import Canvas from "../components/Canvas/Canvas.jsx";
 import { useDispatch, useSelector } from "react-redux";
 import { LOAD_NOTES } from "../store/slices/noteSlice.js";
+import styled from "styled-components";
+
+const MainBoard = styled.div`
+	max-height: 100vh;
+`;
 
 function Create() {
 	const dispatch = useDispatch();
@@ -53,7 +58,7 @@ function Create() {
 	// }, [io]);
 
 	return (
-		<>
+		<MainBoard>
 			<Topbar create={true} />
 			<Canvas />
 			<Sidebar />
@@ -62,7 +67,7 @@ function Create() {
 					<h1>{user}</h1>;
 				})}
 			</div> */}
-		</>
+		</MainBoard>
 	);
 }
 

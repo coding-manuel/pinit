@@ -3,7 +3,6 @@ const Room = require("../models/roomSchema");
 const getRooms = async (req, res) => {
 	try {
 		const rooms = await Room.find({ owner: req.body.userID });
-		console.log(rooms);
 		res.json(rooms);
 	} catch (error) {
 		console.error(error);
@@ -23,7 +22,7 @@ const getRoomTitle = async (req, res) => {
 
 const deleteRoom = async (req, res) => {
 	try {
-		const room = await Room.findOneAndRemove({ roomID: req.body.roomID });
+		await Room.findOneAndRemove({ roomID: req.body.roomID });
 		res.status(200).json({ message: "Deleted Successfully" });
 	} catch (error) {
 		console.error(error);

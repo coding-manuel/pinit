@@ -88,8 +88,11 @@ const NewNote = styled.div`
 	border-radius: 5px;
 	transition: all 0.2s ease-out;
 	&:hover {
+		box-shadow: 0px 10px 13px -6px rgba(0, 0, 0, 0.2),
+			0px 20px 31px 3px rgba(0, 0, 0, 0.14),
+			0px 8px 38px 7px rgba(0, 0, 0, 0.12);
 		background-color: ${(props) => props.theme.color.primaryDarken};
-		transform: translateY(-5px);
+		transform: translateY(-2px);
 	}
 `;
 
@@ -166,7 +169,6 @@ export default function Dashboard() {
 						.post("/rooms/fetchRoomByID", { userID: resp.data.userID })
 						.then(
 							(res) => {
-								console.log(res.data);
 								setRooms([...res.data]);
 							},
 							(err) => console.log(err)
