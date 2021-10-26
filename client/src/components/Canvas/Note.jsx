@@ -449,6 +449,7 @@ function TextEditor() {
 		return Component;
 	}
 
+	// eslint-disable-next-line no-lone-blocks
 	{
 		return formatMenu.map((item) => {
 			const Component = loadComponent(item.id);

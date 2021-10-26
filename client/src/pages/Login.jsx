@@ -132,6 +132,7 @@ function Login() {
 		setIsSubmitting(true);
 		setError("");
 
+    
 		axios()
 			.post("/auth/login", {
 				username: username,
@@ -224,6 +225,7 @@ function Login() {
 		<LoginPage>
 			<Container>
 				<Header>Log In</Header>
+				<form onSubmit={login}>
 				<Label>Username</Label>
 				<Input
 					placeholder="Username"
@@ -237,9 +239,10 @@ function Login() {
 					value={password}
 					onChange={(e) => setPassword(e.target.value)}
 				/>
-				<Button onClick={login}>
+				<Button type="submit">
 					{!isSubmitting ? <>Log in</> : <Loader></Loader>}
 				</Button>
+				</form>
 				<SignInPrompt>
 					Don't have an account?{" "}
 					<SignInLink to={"/register"}>Sign Up</SignInLink>
