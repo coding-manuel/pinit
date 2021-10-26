@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import styled from "styled-components";
 import Note from "../../assets/icons/note.svg";
 import Whiteboard from "../../assets/icons/whiteboard.svg";
@@ -6,8 +6,9 @@ import Link from "../../assets/icons/link.svg";
 import Table from "../../assets/icons/table.svg";
 import File from "../../assets/icons/file.svg";
 import Image from "../../assets/icons/image.svg";
-import  Canvas  from "../Canvas/Canvas.jsx";
-
+import { useDispatch } from "react-redux";
+import { CREATE_NOTE } from "../../store/slices/noteSlice";
+import { useLocation } from "react-router";
 
 const Icon = styled.div`
 	display: flex;
@@ -30,7 +31,7 @@ const Text = styled.h6`
 	margin-top: -5px;
 	padding-bottom: 5px;
 	font-size: 10px;
-	font-weight:${(props) => props.theme.typography.semibold};
+	font-weight: ${(props) => props.theme.typography.semibold};
 	text-align: center;
 	text-decoration: none;
 	&:hover {
@@ -53,9 +54,22 @@ const Container = styled.div`
 `;
 
 function Sidebar() {
+	const dispatch = useDispatch();
+
+	function useQuery() {
+		return new URLSearchParams(useLocation().search);
+	}
+
+	let query = useQuery();
+	const roomID = query.get("roomID");
+
+	const createNotes = () => {
+		dispatch(CREATE_NOTE(roomID));
+	};
+
 	return (
 		<Container>
-			<Icon>
+			<Icon onClick={createNotes}>
 				<Note />
 			</Icon>
 			<Text>Notes</Text>

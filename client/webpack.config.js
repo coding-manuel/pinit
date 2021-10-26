@@ -5,17 +5,25 @@ const UglifyJsPlugin = require("uglifyjs-webpack-plugin");
 
 const config = {
 	mode: "development",
-	entry: ["babel-polyfill", "./src/index.js"],
+	entry: [
+		"webpack-dev-server/client?http://localhost:3000/",
+		"babel-polyfill",
+		"./src/index.js",
+	],
 	//This property defines where the application starts
 	output: {
 		path: path.join(__dirname, "/build"),
 		filename: "bundle.js",
+		publicPath: "/",
 	}, //This property defines the file path and the file name which will be used for deploying the bundled file
 	target: "web",
 	devServer: {
-		port: "3000",
 		open: true,
+		hot: true,
+		port: 3000,
+		historyApiFallback: true,
 	},
+
 	resolve: {
 		extensions: [".js", ". jsx", ". json"],
 	},
