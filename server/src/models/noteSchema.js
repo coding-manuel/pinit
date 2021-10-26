@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 
 const noteSchema = new mongoose.Schema({
+	roomID: String,
 	id: String,
 	x: Number,
 	y: Number,
@@ -9,6 +10,6 @@ const noteSchema = new mongoose.Schema({
 	content: String,
 });
 
-const note = mongoose.model("note", noteSchema);
+const Note = mongoose.model("Note", noteSchema, "Notes");
 
-module.exports = note;
+module.exports = Note;

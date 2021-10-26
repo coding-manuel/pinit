@@ -1,25 +1,29 @@
 import React, {
+	useEffect,
 	useMemo,
 	useState,
 	useCallback,
 	useRef,
-	useContext,
 	Suspense,
 } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import {
 	UPDATE_NOTESET,
 	SELECT_NOTE,
 	DRAG_NOTE,
-	FORMAT_NOTE_CONTENT,
+	ADD_NOTE,
+	DELETE_NOTE,
+	REMOVE_NOTE,
 } from "../../store/slices/noteSlice";
-import styled, { ThemeContext } from "styled-components";
+import styled from "styled-components";
 import { Rnd } from "react-rnd";
 import isHotkey from "is-hotkey";
 import { createEditor, Editor, Range, Transforms } from "slate";
 import { Slate, Editable, withReact, ReactEditor, useSlate } from "slate-react";
 import { useTransition, config, animated } from "react-spring";
 import { withHistory } from "slate-history";
+import { io } from "../../services/socket";
+
 import Down from "../../assets/icons/down.svg";
 
 const NoteTop = styled.div`
@@ -214,6 +218,37 @@ export default function Note({ shapeProps, isSelected, draggedNote }) {
 		config: config.gentle,
 	});
 
+	useEffect(() => {
+		io.once("recieveCreateNote", (newNote) => {
+			dispatch(ADD_NOTE(newNote));
+		});
+	}, []);
+
+	useEffect(() => {
+		io.on("recieveNoteDelete", (deleteNoteIndex) => {
+			dispatch(REMOVE_NOTE(deleteNoteIndex));
+		});
+	}, []);
+
+	useEffect(() => {
+		io.on("recieveNoteDrag", (newNote) => {
+			dispatch(UPDATE_NOTESET(newNote));
+		});
+	}, []);
+
+	useEffect(() => {
+		io.on("recieveNoteResize", (newNote) => {
+			dispatch(UPDATE_NOTESET(newNote));
+		});
+	}, []);
+
+	useEffect(() => {
+		io.on("recieveNoteChangeValue", (newNote) => {
+			if (newNote.id === shapeProps.id)
+				setValue(JSON.parse(newNote.content));
+		});
+	}, []);
+
 	const [overflowTrigger, setOverflowTrigger] = useState(false);
 
 	const [value, setValue] = useState(
@@ -229,14 +264,21 @@ export default function Note({ shapeProps, isSelected, draggedNote }) {
 	const renderElement = useCallback((props) => <Element {...props} />, []);
 	const editor = useMemo(() => withHistory(withReact(createEditor())), []);
 
-	const themeContext = useContext(ThemeContext);
-
 	return (
 		<Slate
 			editor={editor}
 			value={value}
 			onChange={(newValue) => {
 				setValue(newValue);
+				const isAstChange = editor.operations.some(
+					(op) => "set_selection" !== op.type
+				);
+				if (isAstChange) {
+					io.emit("noteChangeValue", {
+						...shapeProps,
+						content: JSON.stringify(newValue),
+					});
+				}
 			}}
 		>
 			{transition((style, item) =>
@@ -288,12 +330,17 @@ export default function Note({ shapeProps, isSelected, draggedNote }) {
 					dispatch(SELECT_NOTE(shapeProps.id));
 					ReactEditor.focus(editor);
 				}}
-				onDragStart={(event) => {
-					event.preventDefault();
+				onDragStart={() => {
 					dispatch(DRAG_NOTE(shapeProps.id));
 				}}
+				onDrag={(event, d) => {
+					io.emit("noteDrag", {
+						...shapeProps,
+						x: d.x,
+						y: d.y,
+					});
+				}}
 				onDragStop={(event, d) => {
-					event.preventDefault();
 					dispatch(
 						UPDATE_NOTESET({
 							...shapeProps,
@@ -301,6 +348,11 @@ export default function Note({ shapeProps, isSelected, draggedNote }) {
 							y: d.y,
 						})
 					);
+					io.emit("noteDragStop", {
+						...shapeProps,
+						x: d.x,
+						y: d.y,
+					});
 					dispatch(DRAG_NOTE([]));
 				}}
 				onResize={(e, direction, ref, delta, position) => {
@@ -316,8 +368,18 @@ export default function Note({ shapeProps, isSelected, draggedNote }) {
 							height: ref.offsetHeight,
 						})
 					);
+					io.emit("noteResize", {
+						...shapeProps,
+						width: ref.offsetWidth,
+						height: ref.offsetHeight,
+					});
 				}}
 				disableDragging={isSelected}
+				// onKeyUp={(e) => {
+				// 	if (isSelected && e.keyCode === 46) {
+				// 		dispatch(DELETE_NOTE(shapeProps));
+				// 	}
+				// }}
 			>
 				<NoteTop
 					draggedNote={draggedNote}

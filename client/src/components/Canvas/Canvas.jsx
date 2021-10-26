@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import {
 	UPDATE_NOTESET,
 	SELECT_NOTE,
-	fetchNoteSet,
+	// fetchNoteSet,
 } from "../../store/slices/noteSlice";
 import styled from "styled-components";
 import Note from "./Note.jsx";
@@ -26,14 +26,7 @@ export default function Canvas() {
 	const { noteSet, selectedNote, draggedNote } = useSelector(
 		(state) => state.reducer.note
 	);
-
-	React.useEffect(() => {
-		dispatch(fetchNoteSet());
-		return () => {
-			//
-		};
-	}, [dispatch]);
-
+	const [userList, setUserList] = React.useState([]);
 	const checkDeselect = (e) => {
 		if (e.target.id === "stage") {
 			dispatch(SELECT_NOTE([]));
