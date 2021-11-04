@@ -5,8 +5,8 @@ const morgan = require("morgan");
 const helmet = require("helmet");
 const cors = require("cors");
 const passport = require("passport");
-const serveStatic = require("serve-static");
 const session = require("express-session");
+const MongoStore = require("connect-mongo");
 const cookieParser = require("cookie-parser");
 const path = require("path");
 
@@ -43,13 +43,16 @@ app.use(helmet());
 
 app.use(
 	session({
+		store: MongoStore.create({
+			mongoUrl: process.env.MONGO_URI,
+			useUnifiedTopology: true,
+		}),
 		secret: process.env.SESSION_SECRET,
 		resave: false,
 		saveUninitialized: true,
 		cookie: { maxAge: 1000 * 60 * 60 * 24 },
 	})
 );
-
 app.use(cookieParser(process.env.COOKIE_SECRET));
 
 require("./config/JwtStrategy");
