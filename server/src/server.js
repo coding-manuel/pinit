@@ -63,6 +63,14 @@ app.use(passport.session());
 
 //* ----------------------------------------------------------------------- Routes
 
+app.use(function (req, res, next) {
+	res.setHeader(
+		"Content-Security-Policy",
+		"default-src 'default-src 'self',script-src 'report-sample' 'self',style-src 'report-sample' 'self',object-src 'none',base-uri 'self',connect-src 'self',font-src 'self',frame-src 'self',img-src 'self',manifest-src 'self',media-src 'self',worker-src 'none'"
+	);
+	next();
+});
+
 app.use(express.static(path.join(__dirname, "../../client/build")));
 app.get("*", function (req, res) {
 	res.sendFile("index.html", {
