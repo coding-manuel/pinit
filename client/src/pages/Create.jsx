@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useHistory } from "react-router-dom";
 import axios from "../services/api";
 import { io } from "../services/socket";
 import Topbar from "../components/Navbar/toptitle.topbar.jsx";
@@ -7,6 +7,11 @@ import Sidebar from "../components/Sidebar/sidebar.jsx";
 import Canvas from "../components/Canvas/Canvas.jsx";
 import { useDispatch, useSelector } from "react-redux";
 import { LOAD_NOTES } from "../store/slices/noteSlice.js";
+import {
+	SET_USERS_LIST,
+	SET_USERID,
+	SET_ROLE,
+} from "../store/slices/userSlice.js";
 import styled from "styled-components";
 
 const MainBoard = styled.div`
@@ -15,20 +20,19 @@ const MainBoard = styled.div`
 
 function Create() {
 	const dispatch = useDispatch();
-	const location = useLocation();
+	const userRole = useSelector((state) => state.reducer.user.role);
+	const history = useHistory();
 
 	// const [userList, setUserList] = React.useState([]);
-	function useQuery() {
-		return new URLSearchParams(useLocation().search);
-	}
+	const query = new URLSearchParams(useLocation().search);
 
-	let query = useQuery();
+	const roomID = query.get("roomID") || location.state.roomID;
+	const role = "" || query.get("role");
+
+	let userID = "";
+	let username = "";
+
 	useEffect(() => {
-		if (io == null) return;
-
-		const roomID = query.get("roomID") || location.state.roomID;
-		let userID = "";
-
 		axios()
 			.get("/auth/user", {
 				headers: {
@@ -37,36 +41,47 @@ function Create() {
 			})
 			.then((resp) => {
 				userID = resp.data.userID;
+				username = resp.data.username;
+
+				dispatch(SET_USERID(userID));
+
+				if (io == null) return;
 
 				io.once("load-notes", (notes) => {
 					dispatch(LOAD_NOTES(notes));
 				});
 
-				io.emit("get-board", roomID, userID);
+				io.emit("get-board", roomID, userID, username);
+
+				io.emit("get-users", {
+					roomID: roomID,
+					userID: userID,
+					username: username,
+					role: role,
+				});
 			});
 	}, []);
 
-	// React.useEffect(() => {
-	// 	if (io == null) return;
+	useEffect(() => {
+		if (io == null) return;
+		io.on("set-users", (users) => {
+			dispatch(SET_USERS_LIST(users));
+			dispatch(SET_ROLE(users.find((user) => user.userID === userID)));
+		});
+	}, []);
 
-	// 	io.on("recieveUserNames", (userList) => {
-	// 		setUserList(userList);
-	// 	});
-
-	// 	//const username = prompt("Enter username", "");
-	// 	io.emit("setUserName", "username");
-	// }, [io]);
+	useEffect(() => {
+		if (io == null) return;
+		io.on("disconnect", (users) => {
+			dispatch(SET_USERS_LIST(users));
+		});
+	}, []);
 
 	return (
 		<MainBoard>
 			<Topbar create={true} />
 			<Canvas />
-			<Sidebar />
-			{/* <div>
-				{userList.map((user) => {
-					<h1>{user}</h1>;
-				})}
-			</div> */}
+			{userRole !== "view" && <Sidebar />}
 		</MainBoard>
 	);
 }

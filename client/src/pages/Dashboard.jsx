@@ -18,7 +18,7 @@ const Container = styled.div`
 `;
 
 const Segment = styled.div`
-	margin: 0 0 60px 0;
+	margin: 0 0 4rem 0;
 `;
 
 const Note = styled.div`
@@ -121,10 +121,30 @@ const NewNoteText = styled.h4`
 	margin: 0;
 `;
 
+const Loader = styled.div`
+	border: 5px solid #f3f3f3; /* Light grey */
+	border-top: 5px solid ${(props) => props.theme.color.primary}; /* Blue */
+	border-radius: 50%;
+	width: 20px;
+	height: 20px;
+	animation: spin 1s linear infinite;
+
+	@keyframes spin {
+		0% {
+			transform: rotate(0deg);
+		}
+		100% {
+			transform: rotate(360deg);
+		}
+	}
+`;
+
 export default function Dashboard() {
 	const history = useHistory();
 	const dispatch = useDispatch();
 	const [rooms, setRooms] = useState([]);
+	const [sharedRooms, setSharedRooms] = useState([]);
+	const [isLoading, setIsLoading] = useState(false);
 
 	const CreateNewNote = () => {
 		const roomID = uuidV4();
@@ -146,16 +166,13 @@ export default function Dashboard() {
 
 	const deleteRoom = (roomid) => {
 		const roomID = roomid;
-		axios()
-			.post("/rooms/deleteRoom", { roomID: roomID })
-			.then((res) => {
-				console.log("deleted");
-			});
+		axios().post("/rooms/deleteRoom", { roomID: roomID });
 		const newRooms = rooms.filter((room) => room.roomID !== roomid);
 		setRooms(newRooms);
 	};
 
 	useEffect(() => {
+		setIsLoading(true);
 		axios()
 			.get("/auth/user", {
 				headers: {
@@ -170,6 +187,17 @@ export default function Dashboard() {
 						.then(
 							(res) => {
 								setRooms([...res.data]);
+							},
+							(err) => console.log(err)
+						);
+					axios()
+						.post("/rooms/fetchSharedRoomByID", {
+							userID: resp.data.userID,
+						})
+						.then(
+							(res) => {
+								setSharedRooms([...res.data]);
+								setIsLoading(false);
 							},
 							(err) => console.log(err)
 						);
@@ -196,8 +224,9 @@ export default function Dashboard() {
 				<Segment>
 					<Title>All Notes</Title>
 					<Notes>
-						{rooms !== [] ? (
+						{rooms.length !== 0 ? (
 							rooms.map((room) => {
+								console.log(rooms);
 								return (
 									<Note key={room._id}>
 										<NoteHead
@@ -214,8 +243,34 @@ export default function Dashboard() {
 									</Note>
 								);
 							})
-						) : (
+						) : !isLoading ? (
 							<SubTitle>Oops, No Saved Notes</SubTitle>
+						) : (
+							<Loader></Loader>
+						)}
+					</Notes>
+				</Segment>
+				<Segment>
+					<Title>Shared Notes</Title>
+					<Notes>
+						{sharedRooms.length !== 0 ? (
+							sharedRooms.map((room) => {
+								console.log(rooms);
+								return (
+									<Note key={room._id}>
+										<NoteHead
+											onClick={() => openNote(room.roomID)}
+										></NoteHead>
+										<NoteFoot>
+											<NoteTitle>{room.title}</NoteTitle>
+										</NoteFoot>
+									</Note>
+								);
+							})
+						) : !isLoading ? (
+							<SubTitle>Oops, No Shared Notes</SubTitle>
+						) : (
+							<Loader></Loader>
 						)}
 					</Notes>
 				</Segment>

@@ -30,7 +30,7 @@ const NavLink = styled.a`
 
 const Topbar = ({ create }) => {
 	const history = useHistory();
-	const userID = useSelector((state) => state.reducer.user);
+	const { userID } = useSelector((state) => state.reducer.user);
 
 	const handleLogo = () => {
 		history.push({
