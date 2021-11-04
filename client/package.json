@@ -31,8 +31,9 @@
     "webpack-node-externals": "^3.0.0"
   },
   "scripts": {
-    "start": "webpack-dev-server",
-    "build": "webpack --mode=production",
+    "start": "node src/server/index.js",
+    "dev": "webpack-dev-server",
+    "heroku-postbuild": "webpack --mode=production",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "lint": "lint ./"

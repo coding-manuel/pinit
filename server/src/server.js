@@ -7,6 +7,7 @@ const cors = require("cors");
 const passport = require("passport");
 const session = require("express-session");
 const cookieParser = require("cookie-parser");
+const path = require("path");
 
 const connectDB = require("./config/db");
 const connectSocket = require("./socket");
@@ -65,6 +66,8 @@ app.use("/api/rooms", roomRoutes);
 const middlewares = require("./middlewares");
 app.use(middlewares.notFound);
 app.use(middlewares.errorHandler);
+
+app.use(express.static(path.join(__dirname, "/build")));
 
 http.listen(PORT, () => {
 	console.log(`Listening at http://localhost:${PORT}`);
