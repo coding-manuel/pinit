@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "nodemon src/server.js",
-    "dev": "concurrently \"nodemon src/server.js\" \"cd .. && cd client && npm start\"",
+    "dev": "concurrently \"nodemon src/server.js\" \"cd .. && cd client && npm run dev\"",
     "data:import": "node src/seederScript.js",
     "lint": "eslint src/"
   },
