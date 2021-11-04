@@ -33,7 +33,7 @@
   "scripts": {
     "start": "node src/server/index.js",
     "dev": "webpack-dev-server",
-    "heroku-postbuild": "webpack --mode=production",
+    "build": "webpack --mode=production",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "lint": "lint ./"
