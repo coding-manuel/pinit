@@ -1,7 +1,7 @@
 const connectSocket = async (http) => {
 	const io = require("socket.io")(http, {
 		cors: {
-			origin: "http://localhost:3000",
+			origin: "https://pinit-notetaker.herokuapp.com",
 			methods: ["GET", "POST"],
 		},
 	});
