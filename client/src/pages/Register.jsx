@@ -188,6 +188,7 @@ function Register() {
 					email: email,
 					username: username,
 					password: password,
+					profile: (Math.random() + 1).toString(36).substring(2),
 				})
 				.then(
 					(res) => {
@@ -239,35 +240,35 @@ function Register() {
 			<Container>
 				<Header>Register</Header>
 				<form onSubmit={register}>
-				<Label>Email Address</Label>
-				<Input
-					placeholder="Email Address"
-					value={email}
-					onChange={(e) => setEmail(e.target.value)}
-				/>
-				<Label>Username</Label>
-				<Input
-					placeholder="Username"
-					value={username}
-					onChange={(e) => setUsername(e.target.value)}
-				/>
-				<Label>Set Password</Label>
-				<Input
-					placeholder="Password"
-					type="password"
-					value={password}
-					onChange={(e) => setPassword(e.target.value)}
-				/>
-				<Label>Confirm Password</Label>
-				<Input
-					placeholder="Password"
-					type="password"
-					value={confirmPassword}
-					onChange={(e) => setConfirmPassword(e.target.value)}
-				/>
-				<Button type="submit">
-					{!isSubmitting ? <>Sign Up</> : <Loader></Loader>}
-				</Button>
+					<Label>Email Address</Label>
+					<Input
+						placeholder="Email Address"
+						value={email}
+						onChange={(e) => setEmail(e.target.value)}
+					/>
+					<Label>Username</Label>
+					<Input
+						placeholder="Username"
+						value={username}
+						onChange={(e) => setUsername(e.target.value)}
+					/>
+					<Label>Set Password</Label>
+					<Input
+						placeholder="Password"
+						type="password"
+						value={password}
+						onChange={(e) => setPassword(e.target.value)}
+					/>
+					<Label>Confirm Password</Label>
+					<Input
+						placeholder="Password"
+						type="password"
+						value={confirmPassword}
+						onChange={(e) => setConfirmPassword(e.target.value)}
+					/>
+					<Button type="submit">
+						{!isSubmitting ? <>Sign Up</> : <Loader></Loader>}
+					</Button>
 				</form>
 				<SignInPrompt>
 					Already have an account?{" "}

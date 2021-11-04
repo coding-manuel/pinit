@@ -23,8 +23,23 @@ import { Slate, Editable, withReact, ReactEditor, useSlate } from "slate-react";
 import { useTransition, config, animated } from "react-spring";
 import { withHistory } from "slate-history";
 import { io } from "../../services/socket";
-
+import Trash from "../../assets/icons/trash.svg";
 import Down from "../../assets/icons/down.svg";
+
+const DeleteNote = styled.div`
+	position: absolute;
+	top: -15px;
+	right: -14px;
+	padding: 6px;
+	display: flex;
+	transform: scale(0.8);
+	border-radius: 100px;
+	cursor: pointer;
+	transition: all 0.2s ease-out;
+	&:hover {
+		background-color: ${(props) => props.theme.color.dark[1]};
+	}
+`;
 
 const NoteTop = styled.div`
 	position: absolute;
@@ -385,6 +400,11 @@ export default function Note({ shapeProps, isSelected, draggedNote }) {
 					draggedNote={draggedNote}
 					isSelected={isSelected}
 				></NoteTop>
+				{isSelected && (
+					<DeleteNote onClick={() => dispatch(DELETE_NOTE(shapeProps))}>
+						<Trash />
+					</DeleteNote>
+				)}
 				<NoteOverflow overflow={overflowTrigger}></NoteOverflow>
 				<EditorContainer width={shapeProps.width}>
 					<EditorTextContainer ref={EditorRef}>

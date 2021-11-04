@@ -1,7 +1,6 @@
-import React, { useContext, useCallback, useEffect } from "react";
+import React from "react";
 import { ThemeProvider } from "styled-components";
 import Theme from "./theme";
-import axios from "./services/api";
 import { BrowserRouter as Router, Route, Redirect } from "react-router-dom";
 import Create from "./pages/Create.jsx";
 import Login from "./Pages/Login.jsx";

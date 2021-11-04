@@ -12,13 +12,16 @@ const Stage = styled.div`
 	background: ${(props) => props.theme.color.dark[0]};
 	height: ${window.innerHeight - 40}px;
 	width: 100vw;
+	pointer-events: ${(props) => props.userRole === "viewer" && "none"};
 `;
 
 const Grid = styled.div`
-	height: 100vh;
-	width: 100vw;
+	height: 100%;
+	width: 100%;
 	background-image: url("../../assets/icons/dotgrid.png");
 	background-repeat: repeat-y;
+	position: absolute;
+	z-index: 1000;
 `;
 
 export default function Canvas() {
@@ -26,6 +29,8 @@ export default function Canvas() {
 	const { noteSet, selectedNote, draggedNote } = useSelector(
 		(state) => state.reducer.note
 	);
+	const userRole = useSelector((state) => state.reducer.user.role);
+
 	const [userList, setUserList] = React.useState([]);
 	const checkDeselect = (e) => {
 		if (e.target.id === "stage") {
@@ -39,7 +44,7 @@ export default function Canvas() {
 			onMouseDown={checkDeselect}
 			onTouchStart={checkDeselect}
 		>
-			{/* <Grid></Grid> */}
+			{userRole === "viewer" && <Grid></Grid>}
 			{noteSet.map((note) => {
 				return (
 					<Note
