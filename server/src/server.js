@@ -62,7 +62,6 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 //* ----------------------------------------------------------------------- Routes
-
 app.use(function (req, res, next) {
 	res.setHeader(
 		"Content-Security-Policy",
