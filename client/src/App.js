@@ -3,7 +3,7 @@ import { ThemeProvider } from "styled-components";
 import Theme from "./theme";
 import { BrowserRouter as Router, Route, Redirect } from "react-router-dom";
 import Create from "./pages/Create.jsx";
-import Login from "./Pages/Login.jsx";
+import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 
