@@ -5,6 +5,7 @@ const morgan = require("morgan");
 const helmet = require("helmet");
 const cors = require("cors");
 const passport = require("passport");
+const serveStatic = require("serve-static");
 const session = require("express-session");
 const cookieParser = require("cookie-parser");
 const path = require("path");
@@ -42,7 +43,7 @@ app.use(helmet());
 
 app.use(
 	session({
-		secret: process.env.SECRET,
+		secret: process.env.SESSION_SECRET,
 		resave: false,
 		saveUninitialized: true,
 		cookie: { maxAge: 1000 * 60 * 60 * 24 },
@@ -59,6 +60,12 @@ app.use(passport.session());
 
 //* ----------------------------------------------------------------------- Routes
 
+app.use(express.static(path.join(__dirname, "../../client/build")));
+app.get("*", function (req, res) {
+	res.sendFile("index.html", {
+		root: path.join(__dirname, "../../client/build/"),
+	});
+});
 app.use("/api/auth", authRoutes);
 app.use("/api/notes", notesRoutes);
 app.use("/api/rooms", roomRoutes);
@@ -66,8 +73,6 @@ app.use("/api/rooms", roomRoutes);
 const middlewares = require("./middlewares");
 app.use(middlewares.notFound);
 app.use(middlewares.errorHandler);
-
-app.use(express.static(path.join(__dirname, "/build")));
 
 http.listen(PORT, () => {
 	console.log(`Listening at http://localhost:${PORT}`);

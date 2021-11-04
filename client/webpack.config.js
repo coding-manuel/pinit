@@ -13,7 +13,7 @@ const config = {
 	//This property defines where the application starts
 	output: {
 		path: path.join(__dirname, "/build"),
-		filename: "bundle.js",
+		filename: "[name].js",
 		publicPath: "/",
 	}, //This property defines the file path and the file name which will be used for deploying the bundled file
 	target: "web",
