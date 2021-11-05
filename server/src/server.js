@@ -33,7 +33,7 @@ const PORT = process.env.PORT || 8080;
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(morgan("common"));
-app.use(helmet());
+//app.use(helmet());
 
 app.use(
 	session({
@@ -63,26 +63,26 @@ app.use(passport.session());
 //* ----------------------------------------------------------------------- Routes
 app.use(function (req, res, next) {
 	res.setHeader(
-		"Content-Security-Policy",
-		"default-src 'default-src 'self',script-src 'report-sample' 'self',style-src 'report-sample' 'self',object-src 'none',base-uri 'self',connect-src 'self',font-src 'self',frame-src 'self',img-src 'self',manifest-src 'self',media-src 'self',worker-src 'none'"
+		"content-security-policy-report-only",
+		"default-src 'self' script-src 'none' 'report-sample'; style-src 'self' 'report-sample'; base-uri 'none'; object-src 'none';"
 	);
 	next();
 });
 
 app.use(express.static(path.join(__dirname, "../../client/build")));
+app.use("/api/auth", authRoutes);
+app.use("/api/notes", notesRoutes);
+app.use("/api/rooms", roomRoutes);
 app.get("*", function (req, res) {
 	res.sendFile("index.html", {
 		root: path.join(__dirname, "../../client/build/"),
 	});
 });
-app.use("/api/auth", authRoutes);
-app.use("/api/notes", notesRoutes);
-app.use("/api/rooms", roomRoutes);
 
 const middlewares = require("./middlewares");
 app.use(middlewares.notFound);
 app.use(middlewares.errorHandler);
 
 http.listen(PORT, () => {
-	console.log(`Listening at http://localhost:${PORT}`);
+	console.log(`Listening at https://pinit-notetaker.herokuapp.com:${PORT}`);
 });

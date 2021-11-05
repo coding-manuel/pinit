@@ -4,7 +4,7 @@ const InterpolateHtmlPlugin = require("interpolate-html-plugin");
 const UglifyJsPlugin = require("uglifyjs-webpack-plugin");
 
 const config = {
-	mode: "development",
+	mode: "production",
 	entry: [
 		"webpack-dev-server/client?http://localhost:3000/",
 		"babel-polyfill",
