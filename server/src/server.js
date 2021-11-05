@@ -50,7 +50,7 @@ app.use(
 app.use(cookieParser(process.env.COOKIE_SECRET));
 app.use(
 	cors({
-		origin: "https://pinit-notetaker.herokuapp.com",
+		origin: "https://pinit-notes.herokuapp.com/",
 		credentials: true,
 	})
 );
@@ -84,5 +84,5 @@ app.use(middlewares.notFound);
 app.use(middlewares.errorHandler);
 
 http.listen(PORT, () => {
-	console.log(`Listening at https://pinit-notetaker.herokuapp.com:${PORT}`);
+	console.log(`Listening at https://pinit-notes.herokuapp.com/:${PORT}`);
 });
