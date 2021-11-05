@@ -12,17 +12,11 @@ const config = {
 	],
 	//This property defines where the application starts
 	output: {
-		path: path.join(__dirname, "/build"),
-		filename: "[name].js",
+		path: path.resolve(__dirname, "build"),
+		filename: "scripts/[name].js",
 		publicPath: "/",
 	}, //This property defines the file path and the file name which will be used for deploying the bundled file
 	target: "web",
-	devServer: {
-		open: true,
-		hot: true,
-		port: 3000,
-		historyApiFallback: true,
-	},
 
 	resolve: {
 		extensions: [".js", ". jsx", ". json"],

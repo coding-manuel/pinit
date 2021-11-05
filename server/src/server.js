@@ -32,12 +32,6 @@ const PORT = process.env.PORT || 8080;
 
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
-app.use(
-	cors({
-		origin: "https://pinit-notetaker.herokuapp.com/",
-		credentials: true,
-	})
-);
 app.use(morgan("common"));
 app.use(helmet());
 
@@ -54,7 +48,12 @@ app.use(
 	})
 );
 app.use(cookieParser(process.env.COOKIE_SECRET));
-
+app.use(
+	cors({
+		origin: "https://pinit-notetaker.herokuapp.com",
+		credentials: true,
+	})
+);
 require("./config/JwtStrategy");
 require("./authenticate");
 require("./config/passportConfig")(passport);
