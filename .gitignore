@@ -2,7 +2,6 @@
 node_modules
 
 # local env files
-.env
 .env.*.local
 
 # Log files
@@ -11,7 +10,10 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
+build
+
 # Editor directories and files
+.env
 .idea
 .vscode
 *.suo
