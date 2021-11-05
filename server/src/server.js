@@ -50,7 +50,7 @@ app.use(
 app.use(cookieParser(process.env.COOKIE_SECRET));
 app.use(
 	cors({
-		origin: "https://pinit-notes.herokuapp.com/",
+		origin: "https://pinit-notetaker.herokuapp.com",
 		credentials: true,
 	})
 );
@@ -69,7 +69,7 @@ app.use(function (req, res, next) {
 	next();
 });
 
-app.use("/", express.static(path.join(__dirname, "../../client/build")));
+app.use(express.static(path.join(__dirname, "../../client/build")));
 app.use("/api/auth", authRoutes);
 app.use("/api/notes", notesRoutes);
 app.use("/api/rooms", roomRoutes);
@@ -84,5 +84,5 @@ app.use(middlewares.notFound);
 app.use(middlewares.errorHandler);
 
 http.listen(PORT, () => {
-	console.log(`Listening at https://pinit-notes.herokuapp.com/:${PORT}`);
+	console.log(`Listening at https://pinit-notetaker.herokuapp.com:${PORT}`);
 });
