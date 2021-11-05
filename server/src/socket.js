@@ -1,5 +1,10 @@
 const connectSocket = async (http) => {
-	const io = require("socket.io")(http);
+	const io = require("socket.io")(http, {
+		cors: {
+			origin: "https://pinit-notetaker.herokuapp.com",
+			methods: ["GET", "POST"],
+		},
+	});
 
 	const characters =
 		"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
