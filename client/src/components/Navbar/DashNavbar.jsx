@@ -58,7 +58,6 @@ export default function DashNavbar() {
 	const history = useHistory();
 	const [username, setUsername] = React.useState("");
 	const logOut = () => {
-		console.log("logout");
 		axios()
 			.get("/auth/logout", {
 				headers: {

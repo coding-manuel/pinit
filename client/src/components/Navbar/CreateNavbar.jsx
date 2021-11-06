@@ -96,11 +96,7 @@ export default function CreateNavbar() {
 
 	const titleChange = (title) => {
 		setRoomTitle(title);
-		axios()
-			.post("/rooms/changeRoomTitle", { roomID: roomID, title: title })
-			.then((res) => {
-				console.log("success");
-			});
+		axios().post("/rooms/changeRoomTitle", { roomID: roomID, title: title });
 	};
 
 	const handleKeys = (e) => {

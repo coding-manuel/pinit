@@ -12,6 +12,7 @@ const path = require("path");
 
 const connectDB = require("./config/db");
 const connectSocket = require("./socket");
+const BASE_URL = require("./config/keys");
 const notesRoutes = require("./routes/notesRoutes");
 const authRoutes = require("./routes/authRoutes");
 const roomRoutes = require("./routes/roomRoutes");
@@ -50,7 +51,7 @@ app.use(
 app.use(cookieParser(process.env.COOKIE_SECRET));
 app.use(
 	cors({
-		origin: "https://pinit-notes.herokuapp.com",
+		origin: BASE_URL,
 		credentials: true,
 	})
 );
@@ -61,13 +62,6 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 //* ----------------------------------------------------------------------- Routes
-app.use(function (req, res, next) {
-	res.setHeader(
-		"content-security-policy-report-only",
-		"default-src 'self' script-src 'none' 'report-sample'; style-src 'self' 'report-sample'; base-uri 'none'; object-src 'none';"
-	);
-	next();
-});
 
 app.use(express.static(path.join(__dirname, "../../client/build")));
 app.use("/api/auth", authRoutes);
@@ -84,5 +78,5 @@ app.use(middlewares.notFound);
 app.use(middlewares.errorHandler);
 
 http.listen(PORT, () => {
-	console.log(`Listening at https://pinit-notes.herokuapp.com:${PORT}`);
+	console.log(`Listening at ${PORT}`);
 });

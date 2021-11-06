@@ -64,7 +64,6 @@ const noteSlice = createSlice({
 		},
 		ADD_NOTE(state, { payload }) {
 			state.noteSet.push(payload);
-			console.log("note");
 		},
 		FORMAT_NOTE_CONTENT(state, { payload }) {},
 	},

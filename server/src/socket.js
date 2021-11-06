@@ -1,7 +1,8 @@
 const connectSocket = async (http) => {
 	const io = require("socket.io")(http, {
 		cors: {
-			origin: "*",
+			origin: BASE_URL,
+			credentials: true,
 		},
 	});
 

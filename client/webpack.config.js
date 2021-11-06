@@ -1,10 +1,11 @@
 const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const InterpolateHtmlPlugin = require("interpolate-html-plugin");
-const UglifyJsPlugin = require("uglifyjs-webpack-plugin");
+const TerserPlugin = require("terser-webpack-plugin");
+const { CleanWebpackPlugin } = require("clean-webpack-plugin");
 
 const config = {
-	mode: "production",
+	mode: "development",
 	entry: [
 		"webpack-dev-server/client?http://localhost:3000/",
 		"babel-polyfill",
@@ -17,6 +18,13 @@ const config = {
 		publicPath: "/",
 	}, //This property defines the file path and the file name which will be used for deploying the bundled file
 	target: "web",
+	devServer: {
+		open: true,
+		hot: true,
+		port: 3000,
+		historyApiFallback: true,
+	},
+	devtool: "source-map",
 
 	resolve: {
 		extensions: [".js", ". jsx", ". json"],
@@ -31,7 +39,7 @@ const config = {
 				},
 			},
 			{
-				test: /\.css$/i,
+				test: /.s?css$/,
 				use: ["style-loader", "css-loader"],
 			},
 			{
@@ -49,6 +57,11 @@ const config = {
 		],
 	},
 
+	optimization: {
+		minimize: true,
+		minimizer: [new TerserPlugin()],
+	},
+
 	// Setup plugin to use a HTML file for serving bundled js files
 	plugins: [
 		new HtmlWebpackPlugin({
@@ -57,10 +70,7 @@ const config = {
 			favicon: "./public/favicon.ico",
 		}),
 		new InterpolateHtmlPlugin(HtmlWebpackPlugin),
+		new CleanWebpackPlugin(),
 	],
-
-	optimization: {
-		minimizer: [new UglifyJsPlugin()],
-	},
 };
 module.exports = config;

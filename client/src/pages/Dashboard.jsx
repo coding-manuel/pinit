@@ -226,7 +226,6 @@ export default function Dashboard() {
 					<Notes>
 						{rooms.length !== 0 ? (
 							rooms.map((room) => {
-								console.log(rooms);
 								return (
 									<Note key={room._id}>
 										<NoteHead
@@ -255,7 +254,6 @@ export default function Dashboard() {
 					<Notes>
 						{sharedRooms.length !== 0 ? (
 							sharedRooms.map((room) => {
-								console.log(rooms);
 								return (
 									<Note key={room._id}>
 										<NoteHead
