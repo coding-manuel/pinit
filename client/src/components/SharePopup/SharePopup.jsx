@@ -196,7 +196,7 @@ export default function ShareBoard({
 					<ShareLinkCont>
 						<ShareLink ref={link}>
 							{roomInfo !== null
-								? "https://pinit-notes.herokuapp.com//note/create?roomID=" +
+								? "https://pinit-notes.herokuapp.com/note/create?roomID=" +
 								  roomInfo.roomID +
 								  "&role=" +
 								  (role === "Edit"
