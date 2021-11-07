@@ -33,32 +33,57 @@ const login = (req, res, next) => {
 
 const register = (req, res, next) => {
 	try {
-		User.register(
-			new User({ username: req.body.username }),
-			req.body.password,
-			(err, user) => {
-				if (err) {
-					res.statusCode = 500;
-					res.send(err);
+		User.findOne({
+			$or: [
+				{
+					email: req.body.email,
+				},
+				{
+					username: req.body.username,
+				},
+			],
+		}).then((user) => {
+			if (user) {
+				let errors = {};
+				if (user.username === req.body.username) {
+					errors.username = "User with same username exists";
 				} else {
-					user.name = req.body.name;
-					user.email = req.body.email;
-					user.userID = "id" + Math.random().toString(16).slice(2);
-					const token = getToken({ _id: user._id });
-					const refreshToken = getRefreshToken({ _id: user._id });
-					user.refreshToken.push({ refreshToken });
-					user.save((err, user) => {
-						if (err) {
-							res.statusCode = 500;
-							res.send(err);
-						} else {
-							res.cookie("refreshToken", refreshToken, COOKIE_OPTIONS);
-							res.send({ success: true, token });
-						}
-					});
+					errors.email = "User with same email address exists";
 				}
+				return res.status(400).json({ errors });
+			} else {
+				User.register(
+					new User({ username: req.body.username }),
+					req.body.password,
+					(err, user) => {
+						if (err) {
+							res.status(400).send({ success: false, reason: err });
+						} else {
+							user.email = req.body.email;
+							user.userID = "id" + Math.random().toString(16).slice(2);
+							const token = getToken({ _id: user._id });
+							const refreshToken = getRefreshToken({ _id: user._id });
+							user.refreshToken.push({ refreshToken });
+							user.save((err, user) => {
+								if (err) {
+									res.status(400).json({
+										success: false,
+										reason: err,
+									});
+								} else {
+									res.cookie(
+										"refreshToken",
+										refreshToken,
+										COOKIE_OPTIONS
+									);
+									res.json({ success: true, token });
+								}
+							});
+						}
+					}
+				);
 			}
-		);
+		});
 	} catch (error) {
 		console.error(error);
 		res.status(500).json({ message: "Server Error" });

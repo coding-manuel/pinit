@@ -23,20 +23,27 @@ const Container = styled.div`
 	border-radius: 5px;
 `;
 
+const InputCont = styled.div`
+	margin: 0 0 1rem;
+`;
+
 const Input = styled.input`
 	box-sizing: border-box;
 	font-family: "open sans", sans-serif;
 	color: ${(props) => props.theme.color.white};
 	outline: 0px solid ${(props) => props.theme.color.primary};
 	background: ${(props) => props.theme.color.dark[2]};
+	height: 100%;
 	width: 100%;
 	border-radius: 5px;
 	border: 0;
-	margin: 0 0 20px;
 	padding: 15px;
 	font-size: 14px;
 	font-weight: ${(props) => props.theme.typography.regular};
 	transition: all 0.1s ease-out;
+
+	outline: ${(props) =>
+		!props.valid && "2px solid " + props.theme.color.error};
 
 	&:hover {
 		background: ${(props) => props.theme.color.dark[3]};
@@ -56,7 +63,7 @@ const Button = styled.button`
 	border-radius: 5px;
 	border: 0;
 	padding: 15px;
-	margin: 10px 0 0 0;
+	margin: 2rem 0 0 0;
 	font-size: 18px;
 	font-weight: ${(props) => props.theme.typography.semibold};
 	transition: all 0.1s ease-out;
@@ -77,16 +84,6 @@ const Header = styled.h2`
 const Label = styled.h5`
 	padding: 0 0 10px 0;
 	font-weight: ${(props) => props.theme.typography.semibold};
-`;
-
-const Message = styled.p`
-	margin: 15px 0 0;
-	color: #b3b3b3;
-	font-size: 12px;
-	a {
-		color: purple;
-		text-decoration: none;
-	}
 `;
 
 const Loader = styled.div`
@@ -111,6 +108,12 @@ const SignInPrompt = styled.h5`
 	padding: 20px 0 0 0;
 `;
 
+const Error = styled.h6`
+	color: ${(props) => props.theme.color.error};
+	font-weight: ${(props) => props.theme.typography.semibold};
+	padding: 1rem 0 0 0;
+`;
+
 const SignInLink = styled(Link)`
 	color: ${(props) => props.theme.color.white};
 	text-decoration: none;
@@ -122,32 +125,51 @@ function Login() {
 	const [username, setUsername] = useState("");
 	const [password, setPassword] = useState("");
 	const [isSubmitting, setIsSubmitting] = useState(false);
-	const [error, setError] = useState("");
+	const [errors, setErrors] = useState({});
+	const [usernameError, setUsernameError] = useState(true);
+	const [passwordError, setPasswordError] = useState(true);
 
 	const dispatch = useDispatch();
 	const history = useHistory();
 
+	const validate = () => {
+		let isValid = true;
+
+		if (!username) {
+			isValid = false;
+			errors["username"] = "Please enter your username.";
+			setUsernameError(false);
+		} else if (username.length < 6 || username.length > 25) {
+			isValid = false;
+			errors["username"] = "Username must be between 6 and 25 characters.";
+			setUsernameError(false);
+		}
+
+		if (!password) {
+			isValid = false;
+			errors["password"] = "Please enter your password.";
+			setPasswordError(false);
+		} else if (password.length < 6 || password.length > 25) {
+			isValid = false;
+			errors["password"] = "Password must be between 6 and 25 characters.";
+			setPasswordError(false);
+		}
+
+		return isValid;
+	};
+
 	const login = (event) => {
 		event.preventDefault();
 		setIsSubmitting(true);
-		setError("");
 
-		axios()
-			.post("/auth/login", {
-				username: username,
-				password: password,
-			})
-			.then(
-				(res) => {
-					if (!res.status === 200) {
-						if (res.status === 400) {
-							setError("Please fill all the fields correctly!");
-						} else if (res.status === 401) {
-							setError("Invalid email and password combination.");
-						} else {
-							setError("Please try again later");
-						}
-					} else {
+		if (validate()) {
+			axios()
+				.post("/auth/login", {
+					username: username,
+					password: password,
+				})
+				.then(
+					(res) => {
 						localStorage.setItem("user", res.data.token);
 						axios()
 							.get("/auth/user", {
@@ -155,28 +177,25 @@ function Login() {
 									Authorization: "Bearer " + res.data.token,
 								},
 							})
-							.then(
-								(resp) => {
-									setIsSubmitting(false);
-									dispatch(SET_USERID(resp.data.userID));
-									history.push({
-										pathname: "/dashboard",
-										search: `?userID=${resp.data.userID}`,
-										state: { userID: resp.data.userID },
-									});
-								},
-								(err) => {
-									setError(error);
-								}
-							);
+							.then((resp) => {
+								setIsSubmitting(false);
+								dispatch(SET_USERID(resp.data.userID));
+								history.push({
+									pathname: "/dashboard",
+									search: `?userID=${resp.data.userID}`,
+									state: { userID: resp.data.userID },
+								});
+							});
+					},
+					(error) => {
+						setIsSubmitting(false);
+						setPasswordError(false);
+						setErrors({ ...errors, password: "Enter Valid Credentials" });
 					}
-				},
-				(error) => {
-					setIsSubmitting(false);
-					setError(error);
-				}
-			);
+				);
+		} else setIsSubmitting(false);
 	};
+
 	useEffect(() => {
 		if (localStorage.getItem("user")) {
 			setIsSubmitting(true);
@@ -190,34 +209,24 @@ function Login() {
 						},
 					}
 				)
-				.then(
-					(res) => {
-						localStorage.setItem("user", res.data.token);
-						axios()
-							.get("/auth/user", {
-								headers: {
-									Authorization: "Bearer " + res.data.token,
-								},
-							})
-							.then(
-								(resp) => {
-									setIsSubmitting(false);
-									dispatch(SET_USERID(resp.data.userID));
-									history.push({
-										pathname: "/dashboard",
-										search: `?userID=${resp.data.userID}`,
-										state: { userID: resp.data.userID },
-									});
-								},
-								(err) => {
-									setError(error);
-								}
-							);
-					},
-					(err) => {
-						setError(error);
-					}
-				);
+				.then((res) => {
+					localStorage.setItem("user", res.data.token);
+					axios()
+						.get("/auth/user", {
+							headers: {
+								Authorization: "Bearer " + res.data.token,
+							},
+						})
+						.then((resp) => {
+							setIsSubmitting(false);
+							dispatch(SET_USERID(resp.data.userID));
+							history.push({
+								pathname: "/dashboard",
+								search: `?userID=${resp.data.userID}`,
+								state: { userID: resp.data.userID },
+							});
+						});
+				});
 		}
 	}, []);
 	return (
@@ -225,19 +234,33 @@ function Login() {
 			<Container>
 				<Header>Log In</Header>
 				<form onSubmit={login}>
-					<Label>Username</Label>
-					<Input
-						placeholder="Username"
-						value={username}
-						onChange={(e) => setUsername(e.target.value)}
-					/>
-					<Label>Password</Label>
-					<Input
-						placeholder="Password"
-						type="password"
-						value={password}
-						onChange={(e) => setPassword(e.target.value)}
-					/>
+					<InputCont>
+						<Label>Username</Label>
+						<Input
+							placeholder="Username"
+							value={username}
+							onChange={(e) => {
+								setUsername(e.target.value);
+								setUsernameError(true);
+							}}
+							valid={usernameError}
+						/>
+						{!usernameError && <Error>{errors["username"]}</Error>}
+					</InputCont>
+					<InputCont>
+						<Label>Password</Label>
+						<Input
+							placeholder="Password"
+							type="password"
+							value={password}
+							onChange={(e) => {
+								setPassword(e.target.value);
+								setPasswordError(true);
+							}}
+							valid={passwordError}
+						/>
+						{!passwordError && <Error>{errors["password"]}</Error>}
+					</InputCont>
 					<Button type="submit">
 						{!isSubmitting ? <>Log in</> : <Loader></Loader>}
 					</Button>

@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { useHistory } from "react-router-dom";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
@@ -20,6 +20,10 @@ const Container = styled.div`
 	border-radius: 5px;
 `;
 
+const InputCont = styled.div`
+	margin: 0 0 1rem;
+`;
+
 const Input = styled.input`
 	box-sizing: border-box;
 	font-family: "open sans", sans-serif;
@@ -27,13 +31,15 @@ const Input = styled.input`
 	outline: 0px solid ${(props) => props.theme.color.primary};
 	background: ${(props) => props.theme.color.dark[2]};
 	width: 100%;
+	height: 100%;
 	border-radius: 5px;
 	border: 0;
-	margin: 0 0 20px;
 	padding: 15px;
 	font-size: 14px;
 	font-weight: ${(props) => props.theme.typography.regular};
 	transition: all 0.1s ease-out;
+	outline: ${(props) =>
+		!props.valid && "2px solid " + props.theme.color.error};
 
 	&:hover {
 		background: ${(props) => props.theme.color.dark[3]};
@@ -53,7 +59,7 @@ const Button = styled.button`
 	border-radius: 5px;
 	border: 0;
 	padding: 15px;
-	margin: 10px 0 0 0;
+	margin: 2rem 0 0 0;
 	font-size: 18px;
 	font-weight: ${(props) => props.theme.typography.semibold};
 	transition: all 0.1s ease-out;
@@ -71,25 +77,15 @@ const Header = styled.h2`
 	font-weight: ${(props) => props.theme.typography.semibold};
 `;
 
+const Error = styled.h6`
+	color: ${(props) => props.theme.color.error};
+	font-weight: ${(props) => props.theme.typography.semibold};
+	padding: 1rem 0 0 0;
+`;
+
 const Label = styled.h5`
 	padding: 0 0 10px 0;
 	font-weight: ${(props) => props.theme.typography.semibold};
-`;
-
-const WarningLabel = styled.div`
-	padding: 10px 0 0 0;
-	color: red;
-	font-weight: ${(props) => props.theme.typography.semibold};
-`;
-
-const Message = styled.p`
-	margin: 15px 0 0;
-	color: #b3b3b3;
-	font-size: 12px;
-	a {
-		color: purple;
-		text-decoration: none;
-	}
 `;
 
 const Loader = styled.div`
@@ -127,8 +123,11 @@ function Register() {
 	const [confirmPassword, setConfirmPassword] = useState("");
 	const [email, setEmail] = useState("");
 	const [isSubmitting, setIsSubmitting] = useState(false);
-	const [error, setError] = useState({}); // server side errors
 	const [errors, setErrors] = useState({});
+	const [usernameError, setUsernameError] = useState(true);
+	const [passwordError, setPasswordError] = useState(true);
+	const [emailError, setEmailError] = useState(true);
+	const [confirmPasswordError, setConfirmPasswordError] = useState(true);
 
 	const history = useHistory();
 
@@ -138,31 +137,42 @@ function Register() {
 		if (!username) {
 			isValid = false;
 			errors["username"] = "Please enter your username.";
+			setUsernameError(false);
+		} else if (username.length < 6 || username.length > 25) {
+			isValid = false;
+			errors["username"] = "Username must be between 6 and 25 characters.";
+			setUsernameError(false);
 		}
 
 		if (!email) {
 			isValid = false;
-			errors["email"] = "Please enter your email Address.";
-		}
-
-		if (typeof email !== "undefined") {
+			errors["email"] = "Please enter your email address.";
+			setEmailError(false);
+		} else if (typeof email !== "undefined") {
 			var pattern = new RegExp(
 				/^(("[\w-\s]+")|([\w-]+(?:\.[\w-]+)*)|("[\w-\s]+")([\w-]+(?:\.[\w-]+)*))(@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$)|(@\[?((25[0-5]\.|2[0-4][0-9]\.|1[0-9]{2}\.|[0-9]{1,2}\.))((25[0-5]|2[0-4][0-9]|1[0-9]{2}|[0-9]{1,2})\.){2}(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[0-9]{1,2})\]?$)/i
 			);
 			if (!pattern.test(email)) {
 				isValid = false;
 				errors["email"] = "Please enter valid email address.";
+				setEmailError(false);
 			}
 		}
 
 		if (!password) {
 			isValid = false;
 			errors["password"] = "Please enter your password.";
+			setPasswordError(false);
+		} else if (password.length < 6 || password.length > 25) {
+			isValid = false;
+			errors["password"] = "Password must be between 6 and 25 characters.";
+			setPasswordError(false);
 		}
 
 		if (!confirmPassword) {
 			isValid = false;
-			errors["confirmPassword"] = "Please enter your confirm password.";
+			errors["confirmPassword"] = "Please enter your password again.";
+			setConfirmPasswordError(false);
 		}
 
 		if (
@@ -171,7 +181,8 @@ function Register() {
 		) {
 			if (password != confirmPassword) {
 				isValid = false;
-				errors["password"] = "Passwords don't match.";
+				errors["confirmPassword"] = "Passwords don't match.";
+				setConfirmPasswordError(false);
 			}
 		}
 
@@ -188,49 +199,40 @@ function Register() {
 					email: email,
 					username: username,
 					password: password,
-					profile: (Math.random() + 1).toString(36).substring(2),
 				})
 				.then(
 					(res) => {
-						if (!res.status === 200) {
-							if (res.status === 400) {
-								setError("Please fill all the fields correctly!");
-							} else if (res.status === 401) {
-								setError("Invalid email and password combination.");
-							} else if (res.status === 500) {
-								if (res.data.message)
-									setError(
-										res.data.message || "Please try again later"
-									);
-							} else {
-								setError("Please try again later");
-							}
-						} else {
-							setIsSubmitting(false);
-							axios()
-								.get("/auth/user", {
-									headers: {
-										Authorization: "Bearer " + res.data.token,
-									},
-								})
-								.then(
-									(resp) => {
-										setIsSubmitting(false);
-										history.push({
-											pathname: "/dashboard",
-											search: `?userID=${resp.data.userID}`,
-											state: { userID: resp.data.userID },
-										});
-									},
-									(err) => {
-										setError(error);
-									}
-								);
-						}
-					},
-					(error) => {
 						setIsSubmitting(false);
-						setError(error);
+						axios()
+							.get("/auth/user", {
+								headers: {
+									Authorization: "Bearer " + res.data.token,
+								},
+							})
+							.then((resp) => {
+								setIsSubmitting(false);
+								history.push({
+									pathname: "/dashboard",
+									search: `?userID=${resp.data.userID}`,
+									state: { userID: resp.data.userID },
+								});
+							});
+					},
+					(err) => {
+						setIsSubmitting(false);
+						if (err.response.data.errors.email) {
+							setEmailError(false);
+							setErrors({
+								...errors,
+								email: err.response.data.errors.email,
+							});
+						} else if (err.response.data.errors.username) {
+							setUsernameError(false);
+							setErrors({
+								...errors,
+								username: err.response.data.errors.username,
+							});
+						}
 					}
 				);
 		} else setIsSubmitting(false);
@@ -240,32 +242,62 @@ function Register() {
 			<Container>
 				<Header>Register</Header>
 				<form onSubmit={register}>
-					<Label>Email Address</Label>
-					<Input
-						placeholder="Email Address"
-						value={email}
-						onChange={(e) => setEmail(e.target.value)}
-					/>
-					<Label>Username</Label>
-					<Input
-						placeholder="Username"
-						value={username}
-						onChange={(e) => setUsername(e.target.value)}
-					/>
-					<Label>Set Password</Label>
-					<Input
-						placeholder="Password"
-						type="password"
-						value={password}
-						onChange={(e) => setPassword(e.target.value)}
-					/>
-					<Label>Confirm Password</Label>
-					<Input
-						placeholder="Password"
-						type="password"
-						value={confirmPassword}
-						onChange={(e) => setConfirmPassword(e.target.value)}
-					/>
+					<InputCont>
+						<Label>Email Address</Label>
+						<Input
+							placeholder="Email Address"
+							value={email}
+							onChange={(e) => {
+								setEmail(e.target.value);
+								setEmailError(true);
+							}}
+							valid={emailError}
+						/>
+						{!emailError && <Error>{errors["email"]}</Error>}
+					</InputCont>
+					<InputCont>
+						<Label>Username</Label>
+						<Input
+							placeholder="Username"
+							value={username}
+							onChange={(e) => {
+								setUsername(e.target.value);
+								setUsernameError(true);
+							}}
+							valid={usernameError}
+						/>
+						{!usernameError && <Error>{errors["username"]}</Error>}
+					</InputCont>
+					<InputCont>
+						<Label>Set Password</Label>
+						<Input
+							placeholder="Password"
+							type="password"
+							value={password}
+							onChange={(e) => {
+								setPassword(e.target.value);
+								setPasswordError(true);
+							}}
+							valid={passwordError}
+						/>
+						{!passwordError && <Error>{errors["password"]}</Error>}
+					</InputCont>
+					<InputCont>
+						<Label>Confirm Password</Label>
+						<Input
+							placeholder="Password"
+							type="password"
+							value={confirmPassword}
+							onChange={(e) => {
+								setConfirmPassword(e.target.value);
+								setConfirmPasswordError(true);
+							}}
+							valid={confirmPasswordError}
+						/>
+						{!confirmPasswordError && (
+							<Error>{errors["confirmPassword"]}</Error>
+						)}
+					</InputCont>
 					<Button type="submit">
 						{!isSubmitting ? <>Sign Up</> : <Loader></Loader>}
 					</Button>
@@ -274,9 +306,6 @@ function Register() {
 					Already have an account?{" "}
 					<SignInLink to={"/login"}>Log in</SignInLink>
 				</SignInPrompt>
-				<Message className="message">
-					{/* Not registered? <Link to="/Signup">Create an account</Link> */}
-				</Message>
 			</Container>
 		</LoginPage>
 	);
