@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useLocation, useHistory } from "react-router-dom";
 import axios from "../services/api";
 import { io } from "../services/socket";
@@ -18,10 +18,37 @@ const MainBoard = styled.div`
 	max-height: 100vh;
 `;
 
+const LoaderScreen = styled.div`
+	min-height: 100vh;
+	background: ${(props) => props.theme.color.dark[0]};
+	display: flex;
+	justify-content: center;
+	align-items: center;
+`;
+
+const LoaderAnimation = styled.div`
+	border: 5px solid #f3f3f3; /* Light grey */
+	border-top: 5px solid ${(props) => props.theme.color.primary}; /* Blue */
+	border-radius: 50%;
+	width: 40px;
+	height: 40px;
+	animation: spin 1s linear infinite;
+
+	@keyframes spin {
+		0% {
+			transform: rotate(0deg);
+		}
+		100% {
+			transform: rotate(360deg);
+		}
+	}
+`;
+
 function Create() {
 	const dispatch = useDispatch();
 	const userRole = useSelector((state) => state.reducer.user.role);
 	const history = useHistory();
+	const [isLoading, setIsLoading] = useState(false);
 
 	// const [userList, setUserList] = React.useState([]);
 	const query = new URLSearchParams(useLocation().search);
@@ -33,6 +60,7 @@ function Create() {
 	let username = "";
 
 	useEffect(() => {
+		setIsLoading(true);
 		axios()
 			.get("/auth/user", {
 				headers: {
@@ -51,6 +79,13 @@ function Create() {
 					dispatch(LOAD_NOTES(notes));
 				});
 
+				io.on("set-users", (users) => {
+					console.log(users);
+					dispatch(SET_USERS_LIST(users));
+					dispatch(SET_ROLE(users.find((user) => user.userID === userID)));
+					setTimeout(() => setIsLoading(false), 1000);
+				});
+
 				io.emit("get-board", roomID, userID, username);
 
 				io.emit("get-users", {
@@ -64,25 +99,27 @@ function Create() {
 
 	useEffect(() => {
 		if (io == null) return;
-		io.on("set-users", (users) => {
-			dispatch(SET_USERS_LIST(users));
-			dispatch(SET_ROLE(users.find((user) => user.userID === userID)));
-		});
-	}, []);
-
-	useEffect(() => {
-		if (io == null) return;
 		io.on("disconnect", (users) => {
 			dispatch(SET_USERS_LIST(users));
 		});
 	}, []);
 
-	return (
+	return !isLoading ? (
 		<MainBoard>
 			<Topbar create={true} />
 			<Canvas />
 			{userRole !== "view" && <Sidebar />}
 		</MainBoard>
+	) : (
+		<Loader />
+	);
+}
+
+function Loader() {
+	return (
+		<LoaderScreen>
+			<LoaderAnimation></LoaderAnimation>
+		</LoaderScreen>
 	);
 }
 

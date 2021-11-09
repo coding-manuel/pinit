@@ -25,9 +25,6 @@ const connectSocket = async (http) => {
 	const Room = require("./models/roomSchema");
 
 	io.on("connection", function (socket) {
-		//const notes = {};
-		//const room = {};
-
 		socket.on("get-users", async ({ roomID, userID, username, role }) => {
 			const room = await Room.findOne({ roomID: roomID });
 			if (room) {
@@ -74,13 +71,13 @@ const connectSocket = async (http) => {
 		});
 
 		socket.on("get-board", async (roomID, userID, username) => {
-			const notes = await Note.find({ roomID: roomID }).exec();
+			const notes = await Note.find({ roomID: roomID });
 			var room = await Room.findOne({ roomID: roomID });
 
 			if (!room) {
 				const ShareEditLink = generateString(8);
 				const ShareViewLink = generateString(8);
-				Room.create({
+				await Room.create({
 					roomID: roomID,
 					owner: userID,
 					title: "Untitled",
@@ -93,14 +90,16 @@ const connectSocket = async (http) => {
 					],
 					shareLinks: { edit: ShareEditLink, view: ShareViewLink },
 				});
-				room = await Room.findOne({ roomID: roomID });
+				room = await Room.findOne({ roomID: roomID }, function (err, docs) {
+					socket.join(roomID);
+					socket.emit("load-notes", notes);
+					socket.emit("set-users", docs.users);
+				});
+			} else {
+				socket.join(roomID);
+				socket.emit("load-notes", notes);
+				socket.emit("set-users", room.users);
 			}
-
-			socket.join(roomID);
-
-			socket.emit("load-notes", notes);
-
-			socket.emit("set-users", room.users);
 
 			socket.on("noteCreate", async (newNoteContent) => {
 				await Note.findOneAndUpdate(

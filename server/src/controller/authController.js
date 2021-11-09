@@ -90,6 +90,17 @@ const register = (req, res, next) => {
 	}
 };
 
+const getUsername = async (req, res, next) => {
+	try {
+		console.log(req.body.userID);
+		const user = await User.findOne({ userID: req.body.userID });
+		res.send(user.username);
+	} catch (error) {
+		console.error(error);
+		res.status(500).json({ message: "Server Error" });
+	}
+};
+
 const user = (req, res, next) => {
 	try {
 		res.send(req.user);
@@ -192,4 +203,5 @@ module.exports = {
 	user,
 	refreshToken,
 	logout,
+	getUsername,
 };

@@ -8,12 +8,14 @@ const {
 	user,
 	refreshToken,
 	logout,
+	getUsername,
 } = require("../controller/authController");
 
 router.post("/login", passport.authenticate("local"), login);
 router.post("/register", register);
+router.post("/getUsername", getUsername);
+router.post("/refreshToken", refreshToken);
 router.get("/user", verifyUser, user);
 router.get("/logout", verifyUser, logout);
-router.post("/refreshToken", refreshToken);
 
 module.exports = router;
