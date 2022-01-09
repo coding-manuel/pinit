@@ -7,5 +7,5 @@ This app helps you create, store and share your notes. You can work on 1 board s
 
 ## Screenshots
 
-![Dashboard](/client/src/assets/images/pinIT Dashboard)
+![Dashboard](/client/src/assets/images/pinIT Dashboard.png?raw=true)
 
