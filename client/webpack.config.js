@@ -24,7 +24,7 @@ const config = {
 		port: 3000,
 		historyApiFallback: true,
 	},
-	devtool: "source-map",
+	//devtool: "source-map",
 
 	resolve: {
 		extensions: [".js", ". jsx", ". json"],
@@ -58,7 +58,7 @@ const config = {
 	},
 
 	optimization: {
-		minimize: true,
+		minimize: false,
 		minimizer: [new TerserPlugin()],
 	},
 

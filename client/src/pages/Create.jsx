@@ -80,7 +80,6 @@ function Create() {
 				});
 
 				io.on("set-users", (users) => {
-					console.log(users);
 					dispatch(SET_USERS_LIST(users));
 					dispatch(SET_ROLE(users.find((user) => user.userID === userID)));
 					setTimeout(() => setIsLoading(false), 1000);

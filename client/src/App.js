@@ -6,6 +6,8 @@ import Create from "./pages/Create.jsx";
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
+import Landing from './pages/Landing.jsx'
+import Demo from './pages/Demo.jsx'
 
 function App() {
 	return (
@@ -15,8 +17,10 @@ function App() {
 				<PrivateRoute path="/note/create" component={Create} />
 				<Route path="/login" component={Login} />
 				<Route path="/register" component={Register} />
+				<Route path="/demo" component={Demo} />
+				<Route path="/landing" component={Landing} />
 				<Route path="/" exact>
-					<Redirect to={"/register"} />
+					<Redirect to="/landing" />
 				</Route>
 			</Router>
 		</ThemeProvider>

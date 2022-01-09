@@ -49,6 +49,7 @@ export default function Canvas() {
 				return (
 					<Note
 						shapeProps={note}
+						key={note.id}
 						isSelected={selectedNote.includes(note.id)}
 						draggedNote={draggedNote.includes(note.id)}
 					/>

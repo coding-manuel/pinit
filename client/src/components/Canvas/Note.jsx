@@ -70,7 +70,7 @@ const EditorContainer = styled.div`
 const EditorTextContainer = styled.div``;
 const NoteOverflow = styled.div`
 	background: ${(props) =>
-		props.overflow
+		props.overflowTrigger
 			? "linear-gradient(360deg,rgba(96,96,96,1) 8%,rgba(96,96,96,0.5746673669467788) 18%,rgba(90,103,106,0) 25%,rgba(86,108,113,0) 30%,rgba(0,212,255,0) 100%)"
 			: "transparent"};
 	height: 100px;
@@ -390,11 +390,6 @@ export default function Note({ shapeProps, isSelected, draggedNote }) {
 					});
 				}}
 				disableDragging={isSelected}
-				// onKeyUp={(e) => {
-				// 	if (isSelected && e.keyCode === 46) {
-				// 		dispatch(DELETE_NOTE(shapeProps));
-				// 	}
-				// }}
 			>
 				<NoteTop
 					draggedNote={draggedNote}
@@ -405,7 +400,7 @@ export default function Note({ shapeProps, isSelected, draggedNote }) {
 						<Trash />
 					</DeleteNote>
 				)}
-				<NoteOverflow overflow={overflowTrigger}></NoteOverflow>
+				<NoteOverflow overflowTrigger={overflowTrigger}></NoteOverflow>
 				<EditorContainer width={shapeProps.width}>
 					<EditorTextContainer ref={EditorRef}>
 						<Editable
@@ -474,7 +469,7 @@ function TextEditor() {
 		return formatMenu.map((item) => {
 			const Component = loadComponent(item.id);
 			return (
-				<Suspense fallback={<div>Loading...</div>}>
+				<Suspense key={item.id} fallback={<div>Loading...</div>}>
 					{item.id !== "numbered-list" && item.id !== "bulleted-list" ? (
 						item.id === "bold" ? (
 							<IconCont
