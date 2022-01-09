@@ -7,6 +7,7 @@ import {
 } from "../../store/slices/noteSlice";
 import styled from "styled-components";
 import Note from "./Note.jsx";
+import Link from "./Link.jsx"
 
 const Stage = styled.div`
 	background: ${(props) => props.theme.color.dark[0]};
@@ -29,6 +30,9 @@ export default function Canvas() {
 	const { noteSet, selectedNote, draggedNote } = useSelector(
 		(state) => state.reducer.note
 	);
+	const { linkSet, selectedLink, draggedLink } = useSelector(
+		(state) => state.reducer.link
+	);
 	const userRole = useSelector((state) => state.reducer.user.role);
 
 	const [userList, setUserList] = React.useState([]);
@@ -48,6 +52,16 @@ export default function Canvas() {
 			{noteSet.map((note) => {
 				return (
 					<Note
+						shapeProps={note}
+						key={note.id}
+						isSelected={selectedNote.includes(note.id)}
+						draggedNote={draggedNote.includes(note.id)}
+					/>
+				);
+			})}
+			{linkSet.map((note) => {
+				return (
+					<Link
 						shapeProps={note}
 						key={note.id}
 						isSelected={selectedNote.includes(note.id)}

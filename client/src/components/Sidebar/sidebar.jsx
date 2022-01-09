@@ -8,6 +8,7 @@ import File from "../../assets/icons/file.svg";
 import Image from "../../assets/icons/image.svg";
 import { useDispatch } from "react-redux";
 import { CREATE_NOTE } from "../../store/slices/noteSlice";
+import { CREATE_LINK } from "../../store/slices/linkSlice";
 import { useLocation } from "react-router";
 
 const Icon = styled.div`
@@ -67,20 +68,24 @@ function Sidebar() {
 		dispatch(CREATE_NOTE(roomID));
 	};
 
+	const createLinks = () => {
+		dispatch(CREATE_LINK(roomID));
+	};
+
 	return (
 		<Container>
 			<Icon onClick={createNotes}>
 				<Note />
 			</Icon>
 			<Text>Notes</Text>
+			<Icon onClick={createLinks}>
+				<Link />
+			</Icon>
+			<Text>Link</Text>
 			<Icon>
 				<Whiteboard />
 			</Icon>
 			<Text>Whiteboard</Text>
-			<Icon>
-				<Link />
-			</Icon>
-			<Text>Link</Text>
 			<Icon>
 				<Image />
 			</Icon>
